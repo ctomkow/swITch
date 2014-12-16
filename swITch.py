@@ -5,12 +5,10 @@
 
 ####  !!!!!  NOTE TO SELF !!!!! ####
 # When coding in this, it starts with a spawn/expect/send/expect. Then in main loop its send/expect
-# Also, in the commands.txt, you need to have a blank line at the end so the loop reads the last line....i should fix that...
-# When issuing commands that have lots of output which require you to hit space bar...they don't work so well. Because it needs a return.  I have not coded that.
+# When issuing commands that have lots of output which require you to hit space bar...they don't work so well (it times out). Because it needs a return.  I have not coded that.
 import pexpect
 import sys
 import argparse
-import time
 
 class swITch:
 	
@@ -71,6 +69,8 @@ class swITch:
 					elif i == 2:
 						print '2: ' + child.before
 						#self.killChild(child, 'sw timed out')
+					#elif i == 3:
+					#	print '3: ' + child.before
 					# Write response to file
 					self.writeResponse(openOutputFile, child.before)
 					
