@@ -22,7 +22,7 @@ class swITch:
 		parser.add_argument('-e','--enabled', help='Privileged exec mode', action='store_true',required=False)
 		parser.add_argument('-i','--iplist', help='Txt file with IPs',required=True)
 		parser.add_argument('-c','--commands', help='Txt file with commands',required=True)
-		parser.add_argument('-a', '--access', help='Txt file with username,password per line')
+		parser.add_argument('-a', '--access', help='Txt file with uname,passwd,enablePasswd, each per line')
 		parser.add_argument('-p', '--port', help='CSV (comma delimited) file that has interface number,description part1,description part2')
 		args = parser.parse_args()	
 		self.main(args.enabled, args.iplist, args.commands, args.access, args.port)
@@ -35,13 +35,18 @@ class swITch:
 		openIPlist = self.getFile(iplist, 'r')	
 		openCommands = self.getFile(commands, 'r')
 		openOutputFile = self.getFile('output.txt', 'w')	
-		openAccess = self.getFile('credentials.txt', 'r')
+		openAccess = self.getFile(access, 'r')
+
+		# Extract uname and passwd's
+		uname = openAccess.readline().rstrip('\n')
+		passwd = openAccess.readline().rstrip('\n')
+		enPasswd = openAccess.readline().rstrip('\n')
 
 		# Parse IPs from file
 		for ip in openIPlist:
 			ip = ip.rstrip('\n')	
 			print ip
-			child = self.loginToIP(ip, 'uname', 'passwd')
+			child = self.loginToIP(ip, uname, passwd)
 			if child == False:
 				print 'Remember, a child was killed'
 				pass
@@ -49,7 +54,7 @@ class swITch:
 				print 'step 1 complete - login'
 				# Enable
 				if enable is True:
-					self.privMode(child, 'enablePasswd')
+					self.privMode(child, enPasswd)
 					print 'step 2 complete - enable'
 				else:
 					print '-e Enable flag not set!'
