@@ -10,23 +10,24 @@
 import pexpect
 import sys
 import argparse
+import cDevice
 
 class swITch:
 	
 	def __init__(self):
-		self.argParse()	
-
-	def argParse(self):
+		# Arg Parsing
 		parser = argparse.ArgumentParser(description='This is a config change script!')
-		parser.add_argument('-e','--enabled', help='Privileged exec mode', action='store_true',required=False)
+		parser.add_argument('-e','--enable', help='Privileged exec mode', action='store_true',required=False)
 		parser.add_argument('-i','--iplist', help='Txt file with IPs',required=True)
 		parser.add_argument('-c','--commands', help='Txt file with commands',required=True)
 		parser.add_argument('-a', '--access', help='Txt file with uname,passwd,enablePasswd, each per line')
 		parser.add_argument('-p', '--port', help='CSV (comma delimited) file that has interface number,description part1,description part2')
-		args = parser.parse_args()	
-		self.main(args.enabled, args.iplist, args.commands, args.access, args.port)
+		args = parser.parse_args()
+	
+		self.main(args.enable, args.iplist, args.commands, args.access, args.port)
 
-#-------------------- Main Loop ----------------------------------
+
+	#-------------------- Main Loop ----------------------------------
 
 	def main(self, enable, iplist, commands, access, port):
 			
@@ -42,44 +43,44 @@ class swITch:
 		enPasswd = openAccess.readline().rstrip('\n')
 
 		# Parse IPs from file
+		####### Add in here parsing to differentiate between types of switches, then have different classes for each different switch
 		for ip in openIPlist:
 			ip = ip.rstrip('\n')	
 			print ip
-			child = self.loginToIP(ip, uname, passwd)
-			# Bypass all switch interaction because login fails
-			if  child == False:
-				pass
+
+			# Object   filename.classname
+			ciscoDev = cDevice.cDevice(uname, passwd, ip)
+
+			if enable:
+				ciscoDev.enable(enPasswd)
 			else:
-				print 'step 1 complete - login'
-				# Enable
-				if enable:
-					self.privMode(child, enPasswd)
-					print 'step 2 complete - enable'
-				else:
-					print '***** Warning! -e flag not set. Not all commands may function properly *****'
+				print '***** Warning! -e flag not set. Not all commands may function properly *****'
 					
-				# Parse commands from file
-				for command in openCommands:
-					command = command.rstrip('\n')
-					self.send(child, command)	
-					i = child.expect(['#', pexpect.EOF, pexpect.TIMEOUT], timeout=10)
-					if i == 0:
-						print '0:' +  child.before
-						self.writeOut(openOutputFile, child.before)
-					elif i == 1:
-						print '1:' +  child.before
-					elif i == 2:
-						print '2: ' + child.before
-						#self.killChild(child, 'sw timed out')
-				
+			# Parse commands from file
+			for command in openCommands:
+				command = command.rstrip('\n')
+				ciscoDev.send(command)
+				i = ciscoDev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
+				if i == 0:
+					#output = ciscoDev.before
+					print '0:' 
+					print ciscoDev.output()
+					#self.writeOut(openOutputFile, child.before)
+				elif i == 1:
+					output = ciscoDev.before
+					print '1:' + output
+				elif i == 2:
+					output = ciscoDev.before
+					print '2: ' + output
+									
 		# Cleanup
 		self.closeFile(openOutputFile)
 		self.closeFile(openCommands)
 		self.closeFile(openIPlist)
 		self.closeFile(openAccess)
-
+			
 #------------------ Methods -----------------------------------------
-# All these methods seem to work fine...even the new ssh key handling
+# All these methods seem to work fine...
 #--------------------------------------------------------------------
 	def getFile(self, file, operation):
 		f = open(file, operation)
@@ -88,49 +89,8 @@ class swITch:
 	def closeFile(self, file):
 		file.close()
 
-	def loginToIP(self, ip, uname, passwd):
-		loginString = 'ssh ' + str(uname) + '@' + str(ip)
-		# New SSH key handling
-		sshKey = 'Are you sure you want to continue connecting'
-		child = pexpect.spawn(loginString)
-		i = child.expect([pexpect.TIMEOUT, sshKey, 'Password:'])
-		if i == 0: # Timeout
-			errstr = 'Connection to ' + ip + ' timed out!'
-			self.killChild(child, errstr)
-			return False
-		elif i == 1: # ssh key	
-			print('new ssh key')
-			child.sendline('yes')
-			child.expect('Password:')
-			child.sendline(passwd)
-			child.expect('>')
-			return child 	
-		elif i == 2: # connect successful, provide passwd
-			print 'step 0 complete - loginToIP method'
-			child.sendline(passwd)
-			child.expect('>')
-			return child	
-		else:
-			print 'loginToIP error!'
-
-	def privMode(self, child, passwd):
-		self.send(child, 'en')
-		self.expect(child, 'Password:')
-		self.send(child, passwd)
-		self.expect(child, '#')
-				
-	def expect(self, child, response):
-		child.expect(response)
-
-	def send(self, child, command):	
-		child.sendline(command)
-		
 	def writeOut(self, file, str):
 		file.write(str)
 	
-	def killChild(self, child, errstr):
-		print errstr
-		child.terminate()
-
 if __name__=="__main__":
 	swITch()
