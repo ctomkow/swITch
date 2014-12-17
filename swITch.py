@@ -6,6 +6,7 @@
 ####  !!!!!  NOTE TO SELF !!!!! ####
 # When coding in this, it starts with a spawn/expect/send/expect. Then in main loop its send/expect
 # When issuing commands that have lots of output which require you to hit space bar...they don't work so well (it times out). Because it needs a return.  I have not coded that.
+# Use 'term len 0' as the first command so any output displays all and you don't have to hit space bar
 import pexpect
 import sys
 import argparse
@@ -45,44 +46,41 @@ class swITch:
 			ip = ip.rstrip('\n')	
 			print ip
 			child = self.loginToIP(ip, uname, passwd)
-			if child == False:
-				print 'Remember, a child was killed'
+			# Bypass all switch interaction because login fails
+			if  child == False:
 				pass
 			else:
 				print 'step 1 complete - login'
 				# Enable
-				if enable is True:
+				if enable:
 					self.privMode(child, enPasswd)
 					print 'step 2 complete - enable'
 				else:
-					print '-e Enable flag not set!'
+					print '***** Warning! -e flag not set. Not all commands may function properly *****'
 					
 				# Parse commands from file
 				for command in openCommands:
 					command = command.rstrip('\n')
 					self.send(child, command)	
-					i = child.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
+					i = child.expect(['#', pexpect.EOF, pexpect.TIMEOUT], timeout=10)
 					if i == 0:
 						print '0:' +  child.before
+						self.writeOut(openOutputFile, child.before)
 					elif i == 1:
 						print '1:' +  child.before
 					elif i == 2:
 						print '2: ' + child.before
 						#self.killChild(child, 'sw timed out')
-					#elif i == 3:
-					#	print '3: ' + child.before
-					# Write response to file
-					self.writeResponse(openOutputFile, child.before)
-					
+				
 		# Cleanup
 		self.closeFile(openOutputFile)
 		self.closeFile(openCommands)
 		self.closeFile(openIPlist)
 		self.closeFile(openAccess)
 
-#------------------ Methods ------------------------------------
-# All these methods seem to work fine...even the ssh handling
-#--------------------------------------------------------------
+#------------------ Methods -----------------------------------------
+# All these methods seem to work fine...even the new ssh key handling
+#--------------------------------------------------------------------
 	def getFile(self, file, operation):
 		f = open(file, operation)
 		return f
@@ -92,8 +90,6 @@ class swITch:
 
 	def loginToIP(self, ip, uname, passwd):
 		loginString = 'ssh ' + str(uname) + '@' + str(ip)
-		print loginString
-
 		# New SSH key handling
 		sshKey = 'Are you sure you want to continue connecting'
 		child = pexpect.spawn(loginString)
@@ -129,12 +125,11 @@ class swITch:
 	def send(self, child, command):	
 		child.sendline(command)
 		
-	def writeResponse(self, file, response):
-		file.write(response)
+	def writeOut(self, file, str):
+		file.write(str)
 	
 	def killChild(self, child, errstr):
 		print errstr
-		print child.before, child.after
 		child.terminate()
 
 if __name__=="__main__":
