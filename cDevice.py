@@ -1,7 +1,13 @@
+####################################################################
+# Craig Tomkow
+# December 16, 2014
+#
+# This is a Cisco device specific class
+####################################################################
+
 import pexpect
 
 class cDevice():
-
 	def __init__(self, uname, passwd, ip):
 		sshKey = 'Are you sure you want to continue connecting'
 		loginString = 'ssh ' + str(uname) + '@' + str(ip)
@@ -20,7 +26,7 @@ class cDevice():
 			self.child.expect('>')
 					
 	def expect(self, response):
-		return self.child.expect(response)
+		return self.child.expect(response, timeout=10)
 	
 	def send(self, command):
 		self.child.sendline(command)

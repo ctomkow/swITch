@@ -1,19 +1,20 @@
+####################################################################################
 # Craig Tomkow
-# December 15, 2012
-# University of Alberta, IST
+# December 16, 2014
+#
 # Set a config to a list of switches, specified in config files
 # A minor change for git
-####  !!!!!  NOTE TO SELF !!!!! ####
+#  !!!!!  NOTE TO SELF !!!!! 
 # When coding in this, it starts with a spawn/expect/send/expect. Then in main loop its send/expect
 # When issuing commands that have lots of output which require you to hit space bar...they don't work so well (it times out). Because it needs a return.  I have not coded that.
 # Use 'term len 0' as the first command so any output displays all and you don't have to hit space bar
+####################################################################################
 import pexpect
 import sys
 import argparse
 import cDevice
 
 class swITch:
-	
 	def __init__(self):
 		# Arg Parsing
 		parser = argparse.ArgumentParser(description='This is a config change script!')
@@ -46,8 +47,7 @@ class swITch:
 		####### Add in here parsing to differentiate between types of switches, then have different classes for each different switch
 		for ip in openIPlist:
 			ip = ip.rstrip('\n')	
-			print ip
-
+			
 			# Object   filename.classname
 			ciscoDev = cDevice.cDevice(uname, passwd, ip)
 
@@ -61,17 +61,13 @@ class swITch:
 				command = command.rstrip('\n')
 				ciscoDev.send(command)
 				i = ciscoDev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
-				if i == 0:
-					#output = ciscoDev.before
-					print '0:' 
+				if i == 0: # command sent successfully
 					print ciscoDev.output()
-					#self.writeOut(openOutputFile, child.before)
-				elif i == 1:
-					output = ciscoDev.before
-					print '1:' + output
-				elif i == 2:
-					output = ciscoDev.before
-					print '2: ' + output
+					self.writeOut(openOutputFile, ciscoDev.output())
+				elif i == 1: # EOF
+					print ciscoDev.output()
+				elif i == 2: # Timeout
+					print ciscoDev.output()
 									
 		# Cleanup
 		self.closeFile(openOutputFile)
@@ -80,7 +76,7 @@ class swITch:
 		self.closeFile(openAccess)
 			
 #------------------ Methods -----------------------------------------
-# All these methods seem to work fine...
+# Handling files
 #--------------------------------------------------------------------
 	def getFile(self, file, operation):
 		f = open(file, operation)
