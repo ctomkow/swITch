@@ -2,7 +2,7 @@
 # December 15, 2012
 # University of Alberta, IST
 # Set a config to a list of switches, specified in config files
-
+# A minor change for git
 ####  !!!!!  NOTE TO SELF !!!!! ####
 # When coding in this, it starts with a spawn/expect/send/expect. Then in main loop its send/expect
 # When issuing commands that have lots of output which require you to hit space bar...they don't work so well (it times out). Because it needs a return.  I have not coded that.
