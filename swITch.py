@@ -5,8 +5,7 @@
 # Set a config to a list of switches, specified in config files
 # A minor change for git
 #  !!!!!  NOTE TO SELF !!!!! 
-# When coding in this, it starts with a spawn/expect/send/expect. Then in main loop its send/expect
-# When issuing commands that have lots of output which require you to hit space bar...they don't work so well (it times out). Because it needs a return.  I have not coded that.
+# In the parseCommands loop, its send/expect
 # Use 'term len 0' as the first command so any output displays all and you don't have to hit space bar
 ####################################################################################
 import pexpect
@@ -14,15 +13,16 @@ import sys
 import argparse
 import cDevice
 
+
 class swITch:
 	def __init__(self):
 		# Arg Parsing
-		parser = argparse.ArgumentParser(description='This is a config change script!')
+		parser = argparse.ArgumentParser(description='This program can log into devices using expect, issue commands, and capture the result.')
 		parser.add_argument('-e','--enable', help='Privileged exec mode', action='store_true',required=False)
-		parser.add_argument('-i','--iplist', help='Txt file with IPs',required=True)
-		parser.add_argument('-c','--commands', help='Txt file with commands',required=True)
-		parser.add_argument('-a', '--access', help='Txt file with uname,passwd,enablePasswd, each per line')
-		parser.add_argument('-p', '--port', help='CSV (comma delimited) file that has interface number,description part1,description part2')
+		parser.add_argument('-i','--iplist', help='Txt file with one IP per line',required=True)
+		parser.add_argument('-c','--commands', help='Txt file with one device command per line',required=True)
+		parser.add_argument('-a', '--access', help='Txt file with uname on first line,passwd on second,enablePasswd on third')
+		parser.add_argument('-p', '--port', help='#NOT IMPLEMENTED YET# CSV (comma delimited) file that has interface number,description part1,description part2')
 		args = parser.parse_args()
 	
 		self.main(args.enable, args.iplist, args.commands, args.access, args.port)
@@ -33,10 +33,10 @@ class swITch:
 	def main(self, enable, iplist, commands, access, port):
 			
 		#Get file descriptors for each provided txt file
-		openIPlist = self.getFile(iplist, 'r')	
-		openCommands = self.getFile(commands, 'r')
-		openOutputFile = self.getFile('output.txt', 'w')	
-		openAccess = self.getFile(access, 'r')
+		openIPlist = self.openFile(iplist, 'r')	
+		openCommands = self.openFile(commands, 'r')
+		openOutputFile = self.openFile('output.txt', 'w')	
+		openAccess = self.openFile(access, 'r')
 
 		# Extract uname and passwd's
 		uname = openAccess.readline().rstrip('\n')
@@ -63,12 +63,17 @@ class swITch:
 				i = ciscoDev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
 				if i == 0: # command sent successfully
 					print ciscoDev.output()
-					self.writeOut(openOutputFile, ciscoDev.output())
+					self.writeTo(openOutputFile, ciscoDev.output())
 				elif i == 1: # EOF
+					pass
 					print ciscoDev.output()
 				elif i == 2: # Timeout
+					pass
 					print ciscoDev.output()
-									
+
+			# Cleanup
+			ciscoDev.killDev('Device is done it\'s work')
+													
 		# Cleanup
 		self.closeFile(openOutputFile)
 		self.closeFile(openCommands)
@@ -76,16 +81,18 @@ class swITch:
 		self.closeFile(openAccess)
 			
 #------------------ Methods -----------------------------------------
-# Handling files
+# Handling files. Add exception handling in these methods. Should
+# these methods be in a class? There is already the python file
+# class that these methods call...
 #--------------------------------------------------------------------
-	def getFile(self, file, operation):
+	def openFile(self, file, operation):
 		f = open(file, operation)
 		return f
 
 	def closeFile(self, file):
 		file.close()
 
-	def writeOut(self, file, str):
+	def writeTo(self, file, str):
 		file.write(str)
 	
 if __name__=="__main__":
