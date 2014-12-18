@@ -52,11 +52,13 @@ class swITch:
 			ciscoDev = cDevice.cDevice(uname, passwd, ip)
 
 			if enable:
+				print enPasswd
 				ciscoDev.enable(enPasswd)
 			else:
 				print '***** Warning! -e flag not set. Not all commands may function properly *****'
 					
 			# Parse commands from file
+			# ISSUE!!! The commands are gone after the first IP! Need to do something to have the command exist for the other IP's in the list!
 			for command in openCommands:
 				command = command.rstrip('\n')
 				ciscoDev.send(command)

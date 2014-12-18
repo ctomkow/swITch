@@ -12,13 +12,14 @@ class cDevice():
 		sshKey = 'Are you sure you want to continue connecting'
 		loginString = 'ssh ' + str(uname) + '@' + str(ip)
 		self.child = pexpect.spawn(loginString)
-		i = self.child.expect([pexpect.TIMEOUT, sshKey, 'Password:'])
+		i = self.child.expect([pexpect.TIMEOUT, sshKey, 'assword:'])
 		if i == 0: # timeout
 			errstr = 'Connection to ' + ip + ' timed out!'
 			self.killDev(errstr)
 		elif i == 1: # new ssh key handling
 			self.child.sendline('yes')
-			self.child.expect('Password:')
+			# Missing the 'P' because some Cisco switches prompt 'Password:' and some 'password:' 
+			self.child.expect('assword:')
 			self.child.sendline(passwd)
 			self.child.expect('>')	
 		elif i == 2: # connection successful
@@ -37,7 +38,8 @@ class cDevice():
 			
 	def enable(self, passwd):
 		self.child.sendline('en')
-		self.child.expect('Password:')
+		#same as above, leave it this way
+		self.child.expect('assword:')
 		self.child.sendline(passwd)
 		self.child.expect('#')	
 	
