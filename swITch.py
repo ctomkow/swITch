@@ -35,7 +35,7 @@ class swITch:
 		#Get file descriptors for each provided txt file
 		openIPlist = self.openFile(iplist, 'r')	
 		openCommands = self.openFile(commands, 'r')
-		openOutputFile = self.openFile('output.txt', 'w')	
+		openOutputFile = self.openFile('output.txt', 'a')	
 		openAccess = self.openFile(access, 'r')
 
 		# Extract uname and passwd's
@@ -43,6 +43,14 @@ class swITch:
 		passwd = openAccess.readline().rstrip('\n')
 		enPasswd = openAccess.readline().rstrip('\n')
 
+		# Initialize commands list
+		QueueOfCommands = []
+
+		# Parse commands from file
+		for command in openCommands:
+			command = command.rstrip('\n')
+			QueueOfCommands.append(command)
+			
 		# Parse IPs from file
 		####### Add in here parsing to differentiate between types of switches, then have different classes for each different switch
 		for ip in openIPlist:
@@ -57,11 +65,9 @@ class swITch:
 			else:
 				print '***** Warning! -e flag not set. Not all commands may function properly *****'
 					
-			# Parse commands from file
-			# ISSUE!!! The commands are gone after the first IP! Need to do something to have the command exist for the other IP's in the list!
-			for command in openCommands:
-				command = command.rstrip('\n')
-				ciscoDev.send(command)
+			
+			for cmd in QueueOfCommands:			
+				ciscoDev.send(cmd)
 				i = ciscoDev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
 				if i == 0: # command sent successfully
 					print ciscoDev.output()
