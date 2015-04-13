@@ -1,9 +1,9 @@
 ####################################################################################
 # Craig Tomkow
-# December 16, 2014
+# April 13, 2015
 #
 # Set a config to a list of switches, specified in config files
-# A minor change for git
+#
 #  !!!!!  NOTE TO SELF !!!!! 
 # In the parseCommands loop, its send/expect
 # Use 'term len 0' as the first command so any output displays all and you don't have to hit space bar
