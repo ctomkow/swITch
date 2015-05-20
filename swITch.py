@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ####################################################################################
 # Craig Tomkow
 # April 13, 2015
@@ -5,14 +6,14 @@
 # Set a config to a list of switches, specified in config files
 #
 #  !!!!!  NOTE TO SELF !!!!! 
-# In the parseCommands loop, its send/expect
+# In the send commands loop, its send/expect
 # Use 'term len 0' as the first command so any output displays all and you don't have to hit space bar
 ####################################################################################
 import pexpect
 import sys
 import argparse
 import cDevice
-
+import hDevice
 
 class swITch:
 	def __init__(self):
@@ -74,7 +75,7 @@ class swITch:
 					self.writeTo(openOutputFile, ciscoDev.output())
 				elif i == 1: # EOF
 					pass
-					print ciscoDev.output()
+					rint ciscoDev.output()
 				elif i == 2: # Timeout
 					pass
 					print ciscoDev.output()
