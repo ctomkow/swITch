@@ -14,6 +14,7 @@ import sys
 import argparse
 import cDevice
 import hDevice
+import threading
 
 class swITch:
 	def __init__(self):
@@ -75,7 +76,7 @@ class swITch:
 					self.writeTo(openOutputFile, ciscoDev.output())
 				elif i == 1: # EOF
 					pass
-					rint ciscoDev.output()
+					print ciscoDev.output()
 				elif i == 2: # Timeout
 					pass
 					print ciscoDev.output()
