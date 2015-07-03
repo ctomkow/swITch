@@ -8,12 +8,13 @@
 
 import cDevice
 import hDevice
+import threading
 
-class singleDevThread():
+class devThread():
 	def __init__():
-		pass
+		self.spawn()
 
-	def execute():
+	def spawn():
 		pass
 
 
