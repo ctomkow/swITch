@@ -3,16 +3,18 @@
 # Date: June 25, 2015
 #
 # A class that is used to spawn a single device thread
+# test line for my twig
 ##################################################################  
 
 import cDevice
 import hDevice
+import threading
 
-class singleDevThread():
+class devThread():
 	def __init__():
-		pass
+		self.spawn()
 
-	def execute():
+	def spawn():
 		pass
 
 

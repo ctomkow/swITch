@@ -14,7 +14,7 @@ import sys
 import argparse
 import cDevice
 import hDevice
-import threading
+import devThread
 
 class swITch:
 	def __init__(self):
@@ -50,8 +50,10 @@ class swITch:
 		passwd = openAccess.readline().rstrip('\n')
 		enPasswd = openAccess.readline().rstrip('\n')
 
-		# Initialize commands list
+		# Initialize command, IP, and device lists
 		QueueOfCommands = []
+                QueueOfIPs      = []
+                QueueOfDevices  = []
 
 		# Parse commands from file
 		if portlist: 
@@ -76,8 +78,24 @@ class swITch:
 				command = command.rstrip('\n')
 				QueueOfCommands.append(command)
 			
+# Merged old code
+#		for command in openCommands:
+#			command = command.rstrip('\n')
+#			QueueOfCommands.append(command)
+		
+                # Parse IP's into a list
+#                for ip in openIPlist:
+#                        ip = ip.rstrip('\n')
+#                        QueueOfIPs.append(ip)
+                        
+                # INSERT THREADING LOGIC HERE! Create a thread by calling devThread.py.  That class will have all the cDevice.py calls that are currently below here.
+#                devThread.devThread(uname, passwd, enPasswd, QueueOfIPs.popleft())
+# End merged old code 
+
+                 
 		# Parse IPs from file
 		####### Add in here parsing to differentiate between types of switches, then have different classes for each different switch
+                ########## Most of this creating a device object stuff is getting moved to singleDevThread.py
 		for ip in openIPlist:
 			ip = ip.rstrip('\n')	
 			
