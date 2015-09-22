@@ -22,23 +22,28 @@ class swITch:
 		parser = argparse.ArgumentParser(description='This program can log into devices using expect, issue commands, and capture the result.')
 		parser.add_argument('-e','--enable', help='Privileged exec mode', action='store_true',required=False)
 		parser.add_argument('-i','--iplist', help='Txt file with one IP per line',required=True)
-		parser.add_argument('-c','--commands', help='Txt file with one device command per line',required=True)
+		parser.add_argument('-c','--commands', help='Txt file with one device command per line',required=False)
 		parser.add_argument('-a', '--access', help='Txt file with uname on first line,passwd on second,enablePasswd on third')
-		parser.add_argument('-p', '--port', help='#NOT IMPLEMENTED YET# CSV (comma delimited) file that has interface number,description part1,description part2')
+		parser.add_argument('-p', '--portlist', help='#NOT IMPLEMENTED YET# CSV (comma delimited) file that has interface number,description part1,description part2')
 		args = parser.parse_args()
 	
-		self.main(args.enable, args.iplist, args.commands, args.access, args.port)
+		self.main(args.enable, args.iplist, args.commands, args.access, args.portlist)
 
 
 	#-------------------- Main Loop ----------------------------------
 
-	def main(self, enable, iplist, commands, access, port):
+	def main(self, enable, iplist, commands, access, portlist):
 			
 		#Get file descriptors for each provided txt file
 		openIPlist = self.openFile(iplist, 'r')	
-		openCommands = self.openFile(commands, 'r')
+		if commands:
+			openCommands = self.openFile(commands, 'r')
+			print 'commands is true'
 		openOutputFile = self.openFile('output.txt', 'a')	
 		openAccess = self.openFile(access, 'r')
+		if portlist:
+			openPortList = self.openFile(portlist, 'r')
+			print 'portlist is true'
 
 		# Extract uname and passwd's
 		uname = openAccess.readline().rstrip('\n')
@@ -49,9 +54,27 @@ class swITch:
 		QueueOfCommands = []
 
 		# Parse commands from file
-		for command in openCommands:
-			command = command.rstrip('\n')
-			QueueOfCommands.append(command)
+		if portlist: 
+			for command in openPortList:
+				portCommand = command.rstrip('\n')
+				if portCommand.find(',') == -1:
+					print portCommand
+					QueueOfCommands.append(portCommand)
+				else:
+					portCommandArray = portCommand.split(",")
+					portInt = portCommandArray[0]
+					portInt = portInt.replace('\t', "")
+					print portInt
+					portDesc = portCommandArray[1]
+					portDesc = portDesc.replace('\t', "")
+					print portDesc
+					QueueOfCommands.append(portInt)
+					QueueOfCommands.append(portDesc)
+					print QueueOfCommands
+		if commands:	
+			for command in openCommands:
+				command = command.rstrip('\n')
+				QueueOfCommands.append(command)
 			
 		# Parse IPs from file
 		####### Add in here parsing to differentiate between types of switches, then have different classes for each different switch
@@ -70,8 +93,14 @@ class swITch:
 			
 			for cmd in QueueOfCommands:			
 				ciscoDev.send(cmd)
-				i = ciscoDev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
+
+				if not enable:
+					i = ciscoDev.expect(['>', pexpect.EOF, pexpect.TIMEOUT])
+				else:
+					i = ciscoDev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
+
 				if i == 0: # command sent successfully
+					print '###', cmd
 					print ciscoDev.output()
 					self.writeTo(openOutputFile, ciscoDev.output())
 				elif i == 1: # EOF
@@ -86,7 +115,10 @@ class swITch:
 													
 		# Cleanup
 		self.closeFile(openOutputFile)
-		self.closeFile(openCommands)
+		if commands:
+			self.closeFile(openCommands)
+		if portlist:
+			self.closeFile(openPortList)
 		self.closeFile(openIPlist)
 		self.closeFile(openAccess)
 			
