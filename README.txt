@@ -10,17 +10,19 @@ Install python (e.g. sudo apt-get install python)
 Install pexpect(e.g. sudo apt-get install pexpect)
 
 Create the following files
-	IPlist.txt (one IP per line)
-	commands.txt (switch commands one per line)
+	(optional) IPlist.txt (one IP per line)
+	(optional) commands.txt (switch commands one per line)
 	creds.txt (1st line: uname; 2nd line: passwd; 3rd line: enablePasswd)
-	portDesc.txt (1st line: config t; nth line: int [intNum] , des [intDesc])
+	portDesc.txt (1st line: config t; nth line: "int [intNum] , des [intDesc]")
 
 Run the program.
 
 E.g.
 
 $python ./swITch.py -h (for help)
-$python ./swITch.py -e -i IPlist.txt -c commands.txt -a credentials.txt
+$python ./swITch.py -e -i IPlist.txt -c commands.txt -a creds.txt
+$python ./swITch.py -e -i IPlist.txt -p portDesc.txt -a creds.txt
+$python ./swITch.py -e -i 192.168.0.4 -c 'show vlan b' -a creds.txt
 
 
 
