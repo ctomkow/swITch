@@ -7,8 +7,7 @@
 #
 #  !!!!!  NOTE TO SELF !!!!! 
 # In the send commands loop, its send/expect
-# Use 'term len 0' as the first command so any output displays all and you don't have to hit space bar
-####################################################################################
+#####################################################################################
 import pexpect
 import sys
 import argparse
