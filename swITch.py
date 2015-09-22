@@ -21,30 +21,39 @@ class swITch:
 		# Arg Parsing
 		parser = argparse.ArgumentParser(description='This program can log into devices using expect, issue commands, and capture the result.')
 		parser.add_argument('-e','--enable', help='Privileged exec mode', action='store_true',required=False)
-		parser.add_argument('-i','--iplist', help='Txt file with one IP per line',required=True)
-		parser.add_argument('-c','--commands', help='Txt file with one device command per line',required=False)
-		parser.add_argument('-a', '--access', help='Txt file with uname on first line,passwd on second,enablePasswd on third')
-		parser.add_argument('-p', '--portlist', help='#NOT IMPLEMENTED YET# CSV (comma delimited) file that has interface number,description part1,description part2')
+		parser.add_argument('-i','--iplist', help='Txt file with one IP per line. Or a single IP in single quotes.',required=True)
+		parser.add_argument('-c','--commands', help='Txt file with one device command per line. Or a single command in single quotes.',required=False)
+		parser.add_argument('-a', '--auth', help='Txt file with uname on first line,passwd on second,enablePasswd on third',required=True)
+		parser.add_argument('-p', '--portlist', help='File that has interface and port descriptions seperated by a comma per line. "int gi1/0/1 , des C001".  Tip, use an excel sheet to generate the list.',required=False)
 		args = parser.parse_args()
 	
-		self.main(args.enable, args.iplist, args.commands, args.access, args.portlist)
+		self.main(args.enable, args.iplist, args.commands, args.auth, args.portlist)
 
 
 	#-------------------- Main Loop ----------------------------------
 
-	def main(self, enable, iplist, commands, access, portlist):
-			
-		#Get file descriptors for each provided txt file
+	def main(self, enable, iplist, commands, auth, portlist):
+		
+	
+		# Attempt to get file descriptors for each provided txt file
 		openIPlist = self.openFile(iplist, 'r')	
+		if openIPlist == -1:
+			print 'Hokay, assuming this is an IP not a file'
+			openIPlist = [iplist]
+		
 		if commands:
 			openCommands = self.openFile(commands, 'r')
-			print 'commands is true'
-		openOutputFile = self.openFile('output.txt', 'a')	
-		openAccess = self.openFile(access, 'r')
+			if openCommands == -1:
+				print 'Hokay, assuming this is a cmd not a file'
+				openCommands = [commands]
+
 		if portlist:
 			openPortList = self.openFile(portlist, 'r')
-			print 'portlist is true'
 
+		openOutputFile = self.openFile('output.txt', 'a')	
+
+		openAccess = self.openFile(auth, 'r')
+		
 		# Extract uname and passwd's
 		uname = openAccess.readline().rstrip('\n')
 		passwd = openAccess.readline().rstrip('\n')
@@ -54,6 +63,9 @@ class swITch:
 		QueueOfCommands = []
                 QueueOfIPs      = []
                 QueueOfDevices  = []
+
+		# Add 'term length 0' to beginning of cmd list. THIS IS CISCO SPECIFIC, I SHOULD MOVE THIS CODE SOMEWHERE MORE MEANINGFUL!
+		QueueOfCommands.insert(0, 'term length 0')
 
 		# Parse commands from file
 		if portlist: 
@@ -95,7 +107,9 @@ class swITch:
                  
 		# Parse IPs from file
 		####### Add in here parsing to differentiate between types of switches, then have different classes for each different switch
-                ########## Most of this creating a device object stuff is getting moved to singleDevThread.py
+                ########## Most of this creating a device object stuff is getting moved to devThread.py
+
+		
 		for ip in openIPlist:
 			ip = ip.rstrip('\n')	
 			
@@ -146,11 +160,18 @@ class swITch:
 # class that these methods call...
 #--------------------------------------------------------------------
 	def openFile(self, file, operation):
-		f = open(file, operation)
+		try:
+			f = open(file, operation)
+		except IOError:
+			print 'Can\'t open file because I can\'t find file to open.'
+			return -1
 		return f
 
 	def closeFile(self, file):
-		file.close()
+		try:
+			file.close()
+		except AttributeError:
+			print 'Can\'t close file due to no file attributes'
 
 	def writeTo(self, file, str):
 		file.write(str)

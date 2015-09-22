@@ -11,8 +11,9 @@ Install pexpect(e.g. sudo apt-get install pexpect)
 
 Create the following files
 	IPlist.txt (one IP per line)
-	commands.txt (switch commands, one per line)
-	credentials.txt (1st line: uname, 2nd line: passwd, 3rd line: enablePasswd)
+	commands.txt (switch commands one per line)
+	creds.txt (1st line: uname; 2nd line: passwd; 3rd line: enablePasswd)
+	portDesc.txt (1st line: config t; nth line: int [intNum] , des [intDesc])
 
 Run the program.
 
