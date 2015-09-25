@@ -6,15 +6,21 @@
 # test line for my twig
 ##################################################################  
 
-import cDevice
-import hDevice
 import threading
 
-class devThread():
-	def __init__():
-		self.spawn()
+import cDevice
+import hDevice
 
-	def spawn():
-		pass
+
+class devThread():
+
+
+    def __init__():
+
+        self.spawn()
+
+    def spawn():
+
+        pass
 
 
