@@ -1,6 +1,5 @@
----------------------------- Installation and Usage ----------------------------
-================================================================================
-
+Installation and Usage 
+======================
 
 SWITCH AUTOMATION
 -----------------
@@ -25,11 +24,10 @@ SETUP
 
 
 3. Create the following files
-    (optional) iplist.txt (one IP per line)
-    (optional) commands.txt (switch commands one per line)
-    (optional) portDesc.txt (1st line: config t; 
-        nth line: "int [intNum] , des [intDesc]")
-    creds.txt (1st line: uname; 2nd line: passwd; 3rd line: enablePasswd)
+  *(optional) iplist.txt (one IP per line)
+  *(optional) commands.txt (switch commands one per line)
+  *(optional) portDesc.txt (1st line: config t; nth line: "int [intNum] , des [intDesc]")
+  *creds.txt (1st line: uname; 2nd line: passwd; 3rd line: enablePasswd)
     
 
 RUN
