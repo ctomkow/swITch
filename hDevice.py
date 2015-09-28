@@ -5,10 +5,10 @@
 # This is a HP device specific class
 ####################################################################
 
-import pexpect
+import device
 
 
-class hDevice():
+class hDevice(device):
 
 
     def __init__(self, uname, passwd, ip):
@@ -32,19 +32,6 @@ class hDevice():
             self.child.expect('')
             self.child.sendline('\n')
             self.child.expect('>')
-                    
-    def expect(self, response):
-
-        return self.child.expect(response, timeout=10)
-    
-    def send(self, command):
-
-        self.child.sendline(command)
-
-    def kill_dev(self, errstr):
-
-        print errstr
-        self.child.terminate()  
             
     def enable(self, uname, passwd):
 
@@ -55,8 +42,4 @@ class hDevice():
         self.child.expect('assword:')
         self.child.sendline(passwd)
         self.child.expect('#')  
-    
-    def output(self):
-
-        return self.child.before
 

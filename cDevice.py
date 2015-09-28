@@ -5,10 +5,10 @@
 # This is a Cisco device specific class
 ####################################################################
 
-import pexpect
+import device
 
 
-class cDevice():
+class cDevice(device):
 
 
     def __init__(self, uname, passwd, ip):
@@ -29,20 +29,7 @@ class cDevice():
             self.child.expect('>')  
         elif i == 2: # connection successful
             self.child.sendline(passwd)
-            self.child.expect('>')
-                    
-    def expect(self, response):
-
-        return self.child.expect(response, timeout=10)
-    
-    def send(self, command):
-
-        self.child.sendline(command)
-
-    def kill_dev(self, errstr):
-
-        print errstr
-        self.child.terminate()  
+            self.child.expect('>') 
             
     def enable(self, passwd):
 
@@ -50,8 +37,4 @@ class cDevice():
         self.child.expect('assword:') # Same as above, let it this way
         self.child.sendline(passwd)
         self.child.expect('#')  
-    
-    def output(self):
-
-        return self.child.before
 

@@ -13,6 +13,7 @@ import argparse
 
 import pexpect
 
+import device
 import cDevice
 import hDevice
 import devThread
