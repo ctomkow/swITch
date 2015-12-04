@@ -8,9 +8,6 @@
 
 import threading
 
-import cDevice
-import hDevice
-
 
 class devThread():
 

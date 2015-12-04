@@ -6,7 +6,7 @@
 ####################################################################
 
 import device
-
+import pexpect
 
 class hDevice(device):
 

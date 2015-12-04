@@ -13,9 +13,7 @@ import argparse
 
 import pexpect
 
-import device
 import cDevice
-import hDevice
 import devThread
 
 
@@ -64,16 +62,33 @@ class swITch:
         openOutputFile = self.open_file('output.txt', 'a')   
         openAccess = self.open_file(auth, 'r')
         
-        # Extract uname and passwd's
-        uname = openAccess.readline().rstrip('\n')
-        passwd = openAccess.readline().rstrip('\n')
-        enPasswd = openAccess.readline().rstrip('\n')
+        # Extract uname and passwd's (\r\n for Windows) (\n for Unix)
+        # Search for \r\n first, if not, then it will remove just \n from \r\n
+        uname = openAccess.readline()
+        if uname.endswith('\r\n'):
+            uname = uname.rstrip('\r\n')
+        elif uname.endswith('\n'):
+            uname = uname.rstrip('\n')
+        passwd = openAccess.readline()
+        if passwd.endswith('\r\n'):
+            passwd = passwd.rstrip('\r\n')
+        elif passwd.endswith('\n'):
+            passwd = passwd.rstrip('\n')
+        enPasswd = openAccess.readline()
+        if enPasswd.endswith('\r\n'):
+            enPasswd = enPasswd.rstrip('\r\n')
+        elif enPasswd.endswith('\n'):
+            enPasswd = enPasswd.rstrip('\n')
 
         # Initialize command, IP, and device lists
         QueueOfCommands = []
         QueueOfIPs      = []
         QueueOfDevices  = []
-
+        
+        #############
+        # NEED A WAY TO DETECT TYPE OF SWITCH - PROBABLY SPECIFY IN IP FILE
+        #############
+        
         # Add 'term length 0' to beginning of cmd list. THIS IS CISCO SPECIFIC,
         # I SHOULD MOVE THIS CODE SOMEWHERE MORE MEANINGFUL!
         QueueOfCommands.insert(0, 'term length 0')

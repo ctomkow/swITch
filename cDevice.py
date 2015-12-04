@@ -6,15 +6,15 @@
 ####################################################################
 
 import device
+import pexpect
 
-
-class cDevice(device):
+class cDevice(device.device):
 
 
     def __init__(self, uname, passwd, ip):
 
         sshKey = 'Are you sure you want to continue connecting'
-        loginString = 'ssh ' + str(uname) + '@' + str(ip)
+        loginString = 'ssh ' + uname + '@' + ip
         self.child = pexpect.spawn(loginString)
         i = self.child.expect([pexpect.TIMEOUT, sshKey, 'assword:'])
         if i == 0: # timeout
