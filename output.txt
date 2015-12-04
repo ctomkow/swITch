@@ -1,0 +1,76 @@
+terminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterm length 0
+GSB-TR-237-01show int br
+                       ^
+% Invalid input detected at '^' marker.
+
+GSB-TR-237-01term length 0
+GSB-TR-237-01term length 1000
+                             ^
+% Invalid input detected at '^' marker.
+
+GSB-TR-237-01term length 0
+GSB-TR-237-01show int br
+                       ^
+% Invalid input detected at '^' marker.
+
+GSB-TR-237-01terminal length 0
+
+GSB-237-DellTestterminal length 1000
+                                 ^
+Value is out of range. The valid range is 0 to 512.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTestterminal length 0
+
+GSB-237-DellTestshow interfaces br
+                                 ^
+% Invalid input detected at '^' marker.
+
+GSB-237-DellTest

@@ -14,6 +14,9 @@ import argparse
 import pexpect
 
 import cDevice
+import hDevice
+import dDevice
+
 import devThread
 
 
@@ -47,11 +50,14 @@ class swITch:
     #-------------------- Main Loop ----------------------------------
     def main(self, enable, iplist, commands, auth, portlist):      
     
+        ##### FILE STUFF #####
+    
         # Attempt to get file descriptors for each provided txt file
-        openIPlist = self.open_file(iplist, 'r') 
-        if openIPlist == -1:
-            print 'Hokay, assuming this is an IP not a file'
-            openIPlist = [iplist] 
+        if iplist is not None:
+            openIPlist = self.open_file(iplist, 'r')
+            if openIPlist == -1:
+                print 'Hokay, assuming this is an IP not a file'
+                openIPlist = [iplist] 
         if commands is not None:
             openCommands = self.open_file(commands, 'r')
             if openCommands == -1:
@@ -84,16 +90,8 @@ class swITch:
         QueueOfCommands = []
         QueueOfIPs      = []
         QueueOfDevices  = []
-        
-        #############
-        # NEED A WAY TO DETECT TYPE OF SWITCH - PROBABLY SPECIFY IN IP FILE
-        #############
-        
-        # Add 'term length 0' to beginning of cmd list. THIS IS CISCO SPECIFIC,
-        # I SHOULD MOVE THIS CODE SOMEWHERE MORE MEANINGFUL!
-        QueueOfCommands.insert(0, 'term length 0')
 
-        # Parse commands from file
+        # Parse port description file
         if portlist is not None: 
             for command in openPortList:
                 portCommand = command.rstrip('\n')
@@ -107,36 +105,60 @@ class swITch:
                     portDesc = portDesc.replace('\t', '')
                     QueueOfCommands.append(portInt)
                     QueueOfCommands.append(portDesc)
+        # Parse cli commands file
         if commands is not None:    
             for command in openCommands:
                 command = command.rstrip('\n')
-                QueueOfCommands.append(command)
-                   
-        for ip in openIPlist:
-            ip = ip.rstrip('\n')     
-            # Object   filename.classname
-            ciscoDev = cDevice.cDevice(uname, passwd, ip)
-            if enable:
-                ciscoDev.enable(enPasswd)
-            else:
-                print """***** Warning! -e flag not set. Not all commands may
-                function properly *****"""          
-            for cmd in QueueOfCommands: # Run all commands on this device 
-                ciscoDev.send(cmd)
-                if not enable:
-                    i = ciscoDev.expect(['>', pexpect.EOF, pexpect.TIMEOUT])
-                else:
-                    i = ciscoDev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
-                if i == 0: # command sent successfully
-                    print 'cmd:', cmd
-                    print ciscoDev.output()
-                    self.write_to(openOutputFile, ciscoDev.output())
-                elif i == 1: # EOF
-                    print 'EOF when expecting from: ' + cmd
-                elif i == 2: # Timeout
-                    print 'Timeout when expecting from: ' + cmd
+                QueueOfCommands.append(command) 
+        # Parse IPs from file
+        if iplist is not None:
+            for ip in openIPlist:
+                ip = ip.rstrip('\n')
+                QueueOfIPs.append(ip)
+        
+        ##### SWITCH CONNECTION AND EXECUTION LOGIC #####          
+                  
+        for ip in QueueOfIPs:
+            # IF CISCO, DO THIS
+            if ip.find('cisco'):
+                QueueOfCommands.insert(0, 'term length 0')
+                ip = ip.rstrip(',cisco')
+                # Object  filename.classname
+                dev = cDevice.cDevice(uname, passwd, ip)
+            # IF HP, DO THIS
+            elif ip.find('hp'):
+                QueueOfCommands.insert(0, 'term length 1000')
+                ip = ip.rstrip(',hp')
+                dev = hDevice.hDevice(uname, passwd, ip) 
+            # IF DELL, DO THIS
+            elif ip.find('dell'):
+                QueueOfCommands.insert(0, 'term length 0')
+                ip = ip.rstrip(',dell')
+                # Object  filename.classname
+                dev = dDevice.dDevice(uname, passwd, ip)
             
-            ciscoDev.kill_dev('Device is done it\'s work') # Kill connection
+            if dev.state == 0: # Continue because object is good
+                if enable:
+                    dev.enable(enPasswd)
+                else:
+                    print """***** Warning! -e flag not set. Not all commands may
+                    function properly *****"""          
+                for cmd in QueueOfCommands: # Run all commands on this device 
+                    dev.send(cmd)
+                    if not enable:
+                        i = dev.expect(['>', pexpect.EOF, pexpect.TIMEOUT])
+                    else:
+                        i = dev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
+                    if i == 0: # command sent successfully
+                        print 'cmd:', cmd
+                        print dev.output()
+                        self.write_to(openOutputFile, dev.output())
+                    elif i == 1: # EOF
+                        print 'EOF when expecting from: ' + cmd
+                    elif i == 2: # Timeout
+                        print 'Timeout when expecting from: ' + cmd
+
+                dev.kill_dev('Device is done it\'s work') # Kill connection
                                                     
         # Close all files if they are open
         self.close_file(openOutputFile)

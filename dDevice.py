@@ -1,14 +1,14 @@
 ####################################################################
 # Craig Tomkow
-# December 16, 2014
+# December 4, 2015
 #
-# This is a Cisco device specific class
+# This is a Dell device specific class
 ####################################################################
 
 import device
 import pexpect
 
-class cDevice(device.device):
+class dDevice(device.device):
 
 
     def __init__(self, uname, passwd, ip):

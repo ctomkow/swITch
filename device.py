@@ -9,6 +9,8 @@
 
 class device():
 
+
+    state = 0
                     
     def expect(self, response):
 

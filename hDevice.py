@@ -8,7 +8,7 @@
 import device
 import pexpect
 
-class hDevice(device):
+class hDevice(device.device):
 
 
     def __init__(self, uname, passwd, ip):
@@ -20,6 +20,7 @@ class hDevice(device):
         if i == 0: # timeout
             errstr = 'Connection to ' + ip + ' timed out!'
             self.kill_dev(errstr)
+            self.state = -1
         elif i == 1: # new ssh key handling
             self.child.sendline('yes')
             # Missing the 'P' because some switches prompt
@@ -32,6 +33,10 @@ class hDevice(device):
             self.child.expect('')
             self.child.sendline('\n')
             self.child.expect('>')
+        elif i == 3: # Connection failed
+            errstr = 'Connection to ' + ip + ' failed. SSH version mismatch?'
+            self.kill_dev(errstr)
+            self.state = -1
             
     def enable(self, uname, passwd):
 
