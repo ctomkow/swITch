@@ -11,6 +11,20 @@ class device():
 
 
     state = 0
+    uname = ''
+    passwd = ''
+    ip = ''
+    enPasswd = ''
+    type = ''
+    sshKey = 'Are you sure you want to continue connecting'
+    
+    def __init__(self, uname, passwd, ip, enPasswd, type):
+        
+        self.uname = uname
+        self.passwd = passwd
+        self.ip = ip
+        self.enPasswd = enPasswd
+        self.type = type
                     
     def expect(self, response):
 

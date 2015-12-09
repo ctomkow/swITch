@@ -91,10 +91,13 @@ class swITch:
         QueueOfIPs      = []
         QueueOfDevices  = []
 
-        # Parse port description file
+        # Parse port description file and remove newlines
         if portlist is not None: 
             for command in openPortList:
-                portCommand = command.rstrip('\n')
+                if portCommand.endswith('\r\n'):
+                    portCommand = command.rstrip('\r\n')
+                elif portCommand.endswith('\n'):
+                    portCommand = command.rstrip('\n')
                 if portCommand.find(',') == -1:
                     QueueOfCommands.append(portCommand)
                 else:
@@ -105,50 +108,61 @@ class swITch:
                     portDesc = portDesc.replace('\t', '')
                     QueueOfCommands.append(portInt)
                     QueueOfCommands.append(portDesc)
-        # Parse cli commands file
+        # Parse cli commands file and strip newlines
         if commands is not None:    
             for command in openCommands:
-                command = command.rstrip('\n')
+                if command.endswith('\r\n'):
+                    command = command.rstrip('\r\n')
+                elif command.endswith('\n'):
+                    command = command.rstrip('\n')
                 QueueOfCommands.append(command) 
-        # Parse IPs from file
+        # Parse IPs from file and strip newlines
         if iplist is not None:
             for ip in openIPlist:
-                ip = ip.rstrip('\n')
+                if ip.endswith('\r\n'):
+                    ip = ip.rstrip('\r\n')
+                elif ip.endswith('\n'):
+                    ip = ip.rstrip('\n')
                 QueueOfIPs.append(ip)
         
-        ##### SWITCH CONNECTION AND EXECUTION LOGIC #####          
-                  
+        ##### SWITCH CONNECTION AND EXECUTION LOGIC #####                       
         for ip in QueueOfIPs:
             # IF CISCO, DO THIS
-            if ip.find('cisco'):
+            if ip.find('cisco') is not -1:
                 QueueOfCommands.insert(0, 'term length 0')
                 ip = ip.rstrip(',cisco')
-                # Object  filename.classname
-                dev = cDevice.cDevice(uname, passwd, ip)
+                #Object  filename.classname
+                dev = cDevice.cDevice(uname, passwd, ip, enPasswd, 'cisco')
+                dev.connect()
             # IF HP, DO THIS
-            elif ip.find('hp'):
+            elif ip.find('hp') is not -1:
                 QueueOfCommands.insert(0, 'term length 1000')
                 ip = ip.rstrip(',hp')
-                dev = hDevice.hDevice(uname, passwd, ip) 
+                dev = hDevice.hDevice(uname, passwd, ip, enPasswd, 'hp') 
+                dev.connect()
             # IF DELL, DO THIS
-            elif ip.find('dell'):
+            elif ip.find('dell') is not -1:
                 QueueOfCommands.insert(0, 'term length 0')
                 ip = ip.rstrip(',dell')
                 # Object  filename.classname
-                dev = dDevice.dDevice(uname, passwd, ip)
+                dev = dDevice.dDevice(uname, passwd, ip, enPasswd, 'dell')
+                dev.connect()
             
             if dev.state == 0: # Continue because object is good
                 if enable:
-                    dev.enable(enPasswd)
+                    dev.enable()
                 else:
                     print """***** Warning! -e flag not set. Not all commands may
-                    function properly *****"""          
-                for cmd in QueueOfCommands: # Run all commands on this device 
+                    function properly *****"""
+                for cmd in QueueOfCommands: # Run all commands on this device
+                    print QueueOfCommands
                     dev.send(cmd)
                     if not enable:
                         i = dev.expect(['>', pexpect.EOF, pexpect.TIMEOUT])
+                        print 'NO enable'
                     else:
                         i = dev.expect(['#', pexpect.EOF, pexpect.TIMEOUT])
+                        print 'YES enable'
                     if i == 0: # command sent successfully
                         print 'cmd:', cmd
                         print dev.output()
@@ -157,8 +171,10 @@ class swITch:
                         print 'EOF when expecting from: ' + cmd
                     elif i == 2: # Timeout
                         print 'Timeout when expecting from: ' + cmd
-
-                dev.kill_dev('Device is done it\'s work') # Kill connection
+            # Device ip cleanup
+            QueueOfCommands.pop(0)
+            dev.state = -1 # Not needed as I am killing the child next...
+            dev.kill_dev('Device is done it\'s work') # Kill connection         
                                                     
         # Close all files if they are open
         self.close_file(openOutputFile)
