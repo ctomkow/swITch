@@ -2,7 +2,7 @@
 # Craig Tomkow
 # December 4, 2015
 #
-# This is a Dell device specific class
+# This is a Dell device specific class. It is not done.
 ####################################################################
 
 from device import device

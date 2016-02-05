@@ -1,6 +1,6 @@
 ####################################################################
 # Craig Tomkow
-# December 16, 2014
+# February 5, 2016
 #
 # This is a HP device specific class
 ####################################################################
@@ -12,7 +12,7 @@ class hDevice(device):
         
     def connect(self):
         
-        loginString = 'ssh -1 ' + str(self.uname) + '@' + str(self.ip)
+        loginString = 'ssh ' + str(self.uname) + '@' + str(self.ip)
         self.child = pexpect.spawn(loginString)
         i = self.child.expect([pexpect.TIMEOUT, self.sshKey, 'assword:'])
         if i == 0: # timeout
@@ -29,7 +29,7 @@ class hDevice(device):
             self.state = 0
         elif i == 2: # connection successful, send carriage return, then passwd
             self.child.sendline(self.passwd)
-            self.child.expect('Press any key to continue')
+            self.child.expect('any key to continue')
             self.child.sendline('\n')
             self.child.expect('>')
             self.state = 0
@@ -42,7 +42,7 @@ class hDevice(device):
     def enable(self):
 
         self.child.sendline('en')
-        #For HP TACACS+, it expects a username and password again
+        #For HP TACACS+/radius, it expects a username and password again
         self.child.expect('ame:')
         self.child.sendline(self.uname)
         self.child.expect('assword:')

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Craig Tomkow
-# April 13, 2015
+# February 5, 2016
 #
 # Set a config to a list of switches, specified in config files
 #
@@ -68,36 +68,22 @@ class swITch:
         openOutputFile = self.open_file('output.txt', 'a')   
         openAccess = self.open_file(auth, 'r')
         
-        # Extract uname and passwd's (\r\n for Windows) (\n for Unix)
-        # Search for \r\n first, if not, then it will remove just \n from \r\n
         uname = openAccess.readline()
-        if uname.endswith('\r\n'):
-            uname = uname.rstrip('\r\n')
-        elif uname.endswith('\n'):
-            uname = uname.rstrip('\n')
+        uname = self.strip_new_line(uname)      
         passwd = openAccess.readline()
-        if passwd.endswith('\r\n'):
-            passwd = passwd.rstrip('\r\n')
-        elif passwd.endswith('\n'):
-            passwd = passwd.rstrip('\n')
+        passwd = self.strip_new_line(passwd)       
         enPasswd = openAccess.readline()
-        if enPasswd.endswith('\r\n'):
-            enPasswd = enPasswd.rstrip('\r\n')
-        elif enPasswd.endswith('\n'):
-            enPasswd = enPasswd.rstrip('\n')
+        enPasswd = self.strip_new_line(enPasswd)
 
         # Initialize command, IP, and device lists
         QueueOfCommands = []
         QueueOfIPs      = []
         QueueOfDevices  = []
 
-        # Parse port description file and remove newlines
+        # Parse port description file
         if portlist is not None: 
-            for command in openPortList:
-                if portCommand.endswith('\r\n'):
-                    portCommand = command.rstrip('\r\n')
-                elif portCommand.endswith('\n'):
-                    portCommand = command.rstrip('\n')
+            for portCommand in openPortList:
+                portCommand = self.strip_new_line(portCommand)
                 if portCommand.find(',') == -1:
                     QueueOfCommands.append(portCommand)
                 else:
@@ -108,21 +94,15 @@ class swITch:
                     portDesc = portDesc.replace('\t', '')
                     QueueOfCommands.append(portInt)
                     QueueOfCommands.append(portDesc)
-        # Parse cli commands file and strip newlines
+        # Parse cli commands
         if commands is not None:    
             for command in openCommands:
-                if command.endswith('\r\n'):
-                    command = command.rstrip('\r\n')
-                elif command.endswith('\n'):
-                    command = command.rstrip('\n')
+                command = self.strip_new_line(command)
                 QueueOfCommands.append(command) 
-        # Parse IPs from file and strip newlines
+        # Parse IPs from file
         if iplist is not None:
             for ip in openIPlist:
-                if ip.endswith('\r\n'):
-                    ip = ip.rstrip('\r\n')
-                elif ip.endswith('\n'):
-                    ip = ip.rstrip('\n')
+                ip = self.strip_new_line(ip)
                 QueueOfIPs.append(ip)
         
         ##### SWITCH CONNECTION AND EXECUTION LOGIC #####                       
@@ -210,6 +190,16 @@ class swITch:
     def write_to(self, file, str):
 
         file.write(str)
+    
+    # Strip newlines (\r\n for Windows) (\n for Unix)
+    # Search for \r\n first, if not, it will remove just \n from \r\n
+    def strip_new_line(self, str):
+        
+        if str.endswith('\r\n'):
+            str = str.rstrip('\r\n')
+        elif str.endswith('\n'):
+            str = str.rstrip('\n')
+        return str
 
     
 if __name__=='__main__':
