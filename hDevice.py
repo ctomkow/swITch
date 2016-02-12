@@ -26,16 +26,23 @@ class hDevice(device):
             self.child.expect('assword:')
             self.child.sendline(self.passwd)
             self.child.expect('>')
+            self.expectString = ('>')
+            #self.expectString = self.output().strip() + '>'
+            #print self.expectString
             self.state = 0
         elif i == 2: # connection successful, send carriage return, then passwd
             self.child.sendline(self.passwd)
             self.child.expect('any key to continue')
             self.child.sendline('\n')
             self.child.expect('>')
+            self.expectString = ('>')
+            #self.expectString = self.output().strip() + '>'
+            #print self.expectString
             self.state = 0
             print 'logged in'
         elif i == 3: # Connection failed
-            errstr = 'Connection to ' + self.ip + ' failed. SSH version mismatch?'
+            errstr = 'Connection to ' + self.ip + ''' failed. No SSH? Or SSH version
+            mismatch?'''
             self.kill_dev(errstr)
             self.state = -1
             
@@ -47,5 +54,8 @@ class hDevice(device):
         self.child.sendline(self.uname)
         self.child.expect('assword:')
         self.child.sendline(self.passwd)
-        self.child.expect('#')  
+        self.child.expect('#')
+        self.expectString = ('#')
+        #self.expectString = self.output().strip() + '#'
+        #print self.expectString
 

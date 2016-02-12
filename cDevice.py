@@ -25,14 +25,17 @@ class cDevice(device):
             # 'Password:' and some 'password:' 
             self.child.expect('assword:')
             self.child.sendline(self.passwd)
-            self.child.expect('>') 
+            self.child.expect('>')
+            self.expectString = self.output().strip() + '>'
             self.state = 0
         elif i == 2: # connection successful
             self.child.sendline(self.passwd)
-            self.child.expect('>') 
+            self.child.expect('>')
+            self.expectString = self.output().strip() + '>'
             self.state = 0
         elif i == 3: # Connection failed
-            errstr = 'Connection to ' + self.ip + ' failed. SSH version mismatch?'
+            errstr = 'Connection to ' + self.ip + ''' failed. No SSH? Or SSH version
+            mismatch?'''
             self.kill_dev(errstr)
             self.state = -1
     
@@ -42,4 +45,5 @@ class cDevice(device):
         self.child.expect('assword:') # Same as above, let it this way
         self.child.sendline(self.enPasswd)
         self.child.expect('#')
+        self.expectString = self.output().strip() + '#'
 
