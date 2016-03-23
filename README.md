@@ -38,16 +38,16 @@ delimiter and stops.  Consequently you don't get the full output.  I have branch
 ### SETUP
 
 1. Install python 
-  `* sudo apt-get install python`
+  * `sudo apt-get install python`
 
 
 2. Install pexpect
-  `* sudo apt-get install pexpect`
+  * `sudo apt-get install pexpect`
 
 
 3. Create the following files
 
-  1. ip.list (1<sup>st</sup> - n<sup>th</sup> line: `IP address`,`device type`)
+  1. `ip.list` (1<sup>st</sup> - n<sup>th</sup> line: `IP address`,`device type`)
 
 
     ```
@@ -56,7 +56,7 @@ delimiter and stops.  Consequently you don't get the full output.  I have branch
     ```
 
 
-  2. cli.config (1<sup>st</sup> - n<sup>th</sup> line: `cli command`)
+  2. `cli.config` (1<sup>st</sup> - n<sup>th</sup> line: `cli command`)
 
 
     ```
@@ -65,21 +65,21 @@ delimiter and stops.  Consequently you don't get the full output.  I have branch
     ```
 
 
-  3. port.desc (1<sup>st</sup> line: `config t`, 2<sup>nd</sup> - n<sup>th</sup> line: `interface`,`port description`)
+  3. `port.desc` (1<sup>st</sup> line: `config t`, 2<sup>nd</sup> - n<sup>th</sup> line: `interface`,`port description`)
 
 
     ```
     config t
-    interface gi0/1, description Port C001 : 1-52
-    interface gi0/2, description Port C002 : 1-53
+    interface gi0/1,description Port C001 : 1-52
+    interface gi0/2,description Port C002 : 1-53
     .
     .
     .
-    interface gi0/48, description Port C048 : 1-87
+    interface gi0/48,description Port C048 : 1-87
     ```
 
 
-  4. auth.txt (1<sup>st</sup> line: `username`, 2<sup>nd</sup> line: `password`, 3<sup>rd</sup> line: `enable password`)
+  4. `auth.txt` (1<sup>st</sup> line: `username`, 2<sup>nd</sup> line: `password`, 3<sup>rd</sup> line: `enable password`)
 
 
     ```
