@@ -10,7 +10,7 @@ can then dump the output to a file for later analysis.
 
 * Cisco switches
 
-* HP switches
+* HP switches (mostly)
 
 
 Note: the cDevice.py class (for Cisco devices) should work for many types of switches that
@@ -22,6 +22,7 @@ behave similar to Cisco IOS.
 * There is a known bug with expecting on '#'.  If you have a hashtag anywhere 
 in the config (e.g. port label, or HP 'show runn') then expect hits the 
 delimiter and stops.  Consequently you don't get the full output.  I have branch open and I am working on fixing it.
+* HP Procurves send VT100 control codes over the session.  I need to filter this out.  Otherwise pushing changes to HP's do work, but the output is all messed up.
 
 
 ### FUTURE DEVELOPMENT
@@ -30,6 +31,7 @@ delimiter and stops.  Consequently you don't get the full output.  I have branch
 * I am also planning on creating an APC UPS class for managing APC UPS's over SSH. I found that cDevice.py works quite well for it however.
 * Multi-threading.  I am planning to make this multi-threaded so it will be more efficient at pushing out changes to many devices at once.
 * Allowing to specify which section of config in the cli.config file gets pushed out to certain IP ranges.  Then you can list all the config for various devices (e.g. multi-vendor devices). This will go well together with listing all the IPs in ip.list file.
+* Add ability to check whether you automatically get enabled when logged in or not.  Currently it expects to not be in enable when logged in.  Then it goes into enable mode only if -e flag is set. Coincidentally, I should be able to fix this once the hashtag bug is fixed.
 * Enabling IP ranges using regex in ip.list
 * Enable the use of certificates so you don't need to rely on username and passwords sitting in a text file.
 * Proper display of program output.  E.g. -v -vv -vvv
