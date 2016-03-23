@@ -1,6 +1,6 @@
 # Installation and Usage 
 
-## SWITCH AUTOMATION
+## NETWORK DEVICE AUTOMATION
 
 A python program which allows you to push commands to network devices.  It
 can then dump the output to a file for later analysis.
