@@ -12,10 +12,9 @@ class cDevice(device):
       
     def connect(self):
         
-        #loginString = 'ssh ' + self.uname + '@' + self.ip
-        
+        loginString = 'ssh ' + self.uname + '@' + self.ip 
         #for testing on my old cisco test box...sigh
-        loginString = 'ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 ' + self.uname + '@' + self.ip
+        #loginString = 'ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 ' + self.uname + '@' + self.ip
         self.child = pexpect.spawn(loginString)
         i = self.child.expect([pexpect.TIMEOUT, self.sshKey, 'assword:', pexpect.EOF])
         if i == 0: # timeout
