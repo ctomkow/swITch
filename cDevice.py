@@ -12,7 +12,10 @@ class cDevice(device):
       
     def connect(self):
         
-        loginString = 'ssh ' + self.uname + '@' + self.ip
+        #loginString = 'ssh ' + self.uname + '@' + self.ip
+        
+        #for testing on my old cisco test box...sigh
+        loginString = 'ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 ' + self.uname + '@' + self.ip
         self.child = pexpect.spawn(loginString)
         i = self.child.expect([pexpect.TIMEOUT, self.sshKey, 'assword:', pexpect.EOF])
         if i == 0: # timeout
@@ -26,12 +29,12 @@ class cDevice(device):
             self.child.expect('assword:')
             self.child.sendline(self.passwd)
             self.child.expect('>')
-            self.expectString = self.output().strip() + '>'
+            self.hostname = self.child.before.strip()
             self.state = 0
         elif i == 2: # connection successful
             self.child.sendline(self.passwd)
             self.child.expect('>')
-            self.expectString = self.output().strip() + '>'
+            self.hostname = self.child.before.strip()
             self.state = 0
         elif i == 3: # Connection failed
             errstr = 'Connection to ' + self.ip + ''' failed. No SSH? Or SSH version
@@ -45,5 +48,5 @@ class cDevice(device):
         self.child.expect('assword:') # Same as above, let it this way
         self.child.sendline(self.enPasswd)
         self.child.expect('#')
-        self.expectString = self.output().strip() + '#'
+        self.hostname = self.child.before.strip()
 
