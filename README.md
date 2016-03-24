@@ -19,9 +19,9 @@ behave similar to Cisco IOS.
 
 ### KNOWN BUGS
 
-* There is a known bug with expecting on '#'.  If you have a hashtag anywhere 
+* ~~There is a known bug with expecting on '#'.  If you have a hashtag anywhere 
 in the config (e.g. port label, or HP 'show runn') then expect hits the 
-delimiter and stops.  Consequently you don't get the full output.  I have branch open and I am working on fixing it.
+delimiter and stops.  Consequently you don't get the full output.  I have branch open and I am working on fixing it.~~ Fixed for Cisco devices.  Once I get filtering of VT100 codes for HP's, then the fix can be easily applied to them as well.
 * HP Procurves send VT100 control codes over the session.  I need to filter this out.  Otherwise pushing changes to HP's do work, but the output is all messed up.
 
 
