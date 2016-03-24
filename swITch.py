@@ -136,6 +136,7 @@ class swITch:
                     function properly *****"""
                 for cmd in QueueOfCommands: # Run all commands on this device
                     dev.send(cmd)
+                    print dev.expectString
                     i = dev.expect([dev.expectString, pexpect.EOF, pexpect.TIMEOUT])
                     if i == 0: # command sent successfully
                         print 'cmd:', cmd
