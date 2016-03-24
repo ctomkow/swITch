@@ -135,12 +135,14 @@ class swITch:
                     print """***** Warning! -e flag not set. Not all commands may
                     function properly *****"""
                 for cmd in QueueOfCommands: # Run all commands on this device
-                    dev.send(cmd)
-                    print dev.expectString
-                    i = dev.expect([dev.expectString, pexpect.EOF, pexpect.TIMEOUT])
+                    dev.send(cmd)  
+                    if not enable:
+                        i = dev.expect([r"" + dev.hostname + ".*>$", pexpect.EOF, pexpect.TIMEOUT])
+                    if enable:
+                        i = dev.expect([r"" + dev.hostname + ".*#$", pexpect.EOF, pexpect.TIMEOUT])
+                    print dev.output()
+                    print dev.displayMatch()
                     if i == 0: # command sent successfully
-                        print 'cmd:', cmd
-                        print dev.output()
                         self.write_to(openOutputFile, dev.output())
                     elif i == 1: # EOF
                         print 'EOF when expecting from: ' + cmd

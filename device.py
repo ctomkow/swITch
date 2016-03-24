@@ -18,7 +18,7 @@ class device():
     enPasswd = ''
     type = ''
     sshKey = 'Are you sure you want to continue connecting'
-    expectString = ''
+    hostname = ''
     
     def __init__(self, uname, passwd, ip, enPasswd, type):
         
@@ -44,3 +44,7 @@ class device():
     def output(self):
 
         return self.child.before
+    
+    def displayMatch(self):
+        
+        return self.child.after
