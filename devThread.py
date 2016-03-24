@@ -1,9 +1,9 @@
 ##################################################################
 # Author: Craig Tomkow
-# Date: June 25, 2015
+# Date: March 24, 2016
 #
-# A class that is used to spawn a single device thread
-# test line for my twig
+# A class that will be used to spawn a single device thread
+#
 ##################################################################  
 
 import threading
