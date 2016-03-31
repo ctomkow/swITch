@@ -11,7 +11,7 @@ import re
 class device():
 
 
-    state = 0
+    state = False
     uname = ''
     passwd = ''
     ip = ''
@@ -19,6 +19,9 @@ class device():
     type = ''
     sshKey = 'Are you sure you want to continue connecting'
     hostname = ''
+    enabled = False
+    regexNotExpect = ''
+    regexExpect = ''
     
     def __init__(self, uname, passwd, ip, enPasswd, type):
         

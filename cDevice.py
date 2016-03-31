@@ -20,26 +20,30 @@ class cDevice(device):
         if i == 0: # timeout
             errstr = 'Connection to ' + self.ip + ' timed out!'
             self.kill_dev(errstr)
-            self.state = -1
+            self.state = False
         elif i == 1: # new ssh key handling
             self.child.sendline('yes')
             # Missing the 'P' because some Cisco switches prompt
             # 'Password:' and some 'password:' 
             self.child.expect('assword:')
             self.child.sendline(self.passwd)
-            self.child.expect('>')
+            self.child.expect('>|#')
+            if self.child.after == '#':
+                self.enabled = True
             self.hostname = self.child.before.strip()
-            self.state = 0
+            self.state = True
         elif i == 2: # connection successful
             self.child.sendline(self.passwd)
-            self.child.expect('>')
+            self.child.expect('>|#')
+            if self.child.after == '#':
+                self.enabled = True
             self.hostname = self.child.before.strip()
-            self.state = 0
+            self.state = True
         elif i == 3: # Connection failed
             errstr = 'Connection to ' + self.ip + ''' failed. No SSH? Or SSH version
             mismatch?'''
             self.kill_dev(errstr)
-            self.state = -1
+            self.state = False
     
     def enable(self):
 
@@ -48,4 +52,5 @@ class cDevice(device):
         self.child.sendline(self.enPasswd)
         self.child.expect('#')
         self.hostname = self.child.before.strip()
+        self.enabled = True
 

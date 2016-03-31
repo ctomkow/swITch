@@ -78,7 +78,6 @@ class swITch:
         # Initialize command, IP, and device lists
         QueueOfCommands = []
         QueueOfIPs      = []
-        QueueOfDevices  = []
 
         # Parse port description file
         if portlist is not None: 
@@ -105,7 +104,8 @@ class swITch:
                 ip = self.strip_new_line(ip)
                 QueueOfIPs.append(ip)
         
-        ##### SWITCH CONNECTION AND EXECUTION LOGIC #####                       
+        ##### SWITCH CONNECTION AND EXECUTION LOGIC #####  
+    
         for ip in QueueOfIPs:
             # IF CISCO, DO THIS
             if ip.find('cisco') is not -1:
@@ -128,17 +128,22 @@ class swITch:
                 dev = dDevice.dDevice(uname, passwd, ip, enPasswd, 'dell')
                 dev.connect()
             
-            if dev.state == 0: # Continue because object is good
-                if enable:
+            if dev.state == True: # Continue because object is good
+                # Enable logic
+                if enable and not dev.enabled:
                     dev.enable()
-                else:
-                    print """***** Warning! -e flag not set. Not all commands may
-                    function properly *****"""
-                for cmd in QueueOfCommands: # Run all commands on this device
+                elif enable and dev.enabled:
+                    print """Ignoring -e flag, device already puts you in priveleged mode"""
+                elif not enable and not dev.enabled:
+                    print """Warning! No -e flag, not all commands may work!"""
+                elif not enable and dev.enabled:
+                    pass # Nothing to see here...
+                # Run all commands on this device
+                for cmd in QueueOfCommands: 
                     dev.send(cmd)  
-                    if not enable:
+                    if not dev.enabled:
                         i = dev.expect([r"" + dev.hostname + ".*>$", pexpect.EOF, pexpect.TIMEOUT])
-                    if enable:
+                    if dev.enabled:
                         i = dev.expect([r"" + dev.hostname + ".*#$", pexpect.EOF, pexpect.TIMEOUT])
                     print dev.output()
                     print dev.displayMatch()
@@ -148,10 +153,13 @@ class swITch:
                         print 'EOF when expecting from: ' + cmd
                     elif i == 2: # Timeout
                         print 'Timeout when expecting from: ' + cmd
-            # Device ip cleanup
-            QueueOfCommands.pop(0)
-            dev.state = -1 # Not needed as I am killing the child next...
-            dev.kill_dev('Device is done it\'s work') # Kill connection         
+            
+            else:
+                print "Warning: device object for " + ip + " could not be created! Skipping " + ip
+                self.write_to(openOutputFile, "Skipped " + ip + " Could not create device object!")
+            if dev.state == True:
+                # Device ip cleanup
+                dev.kill_dev('Device is done it\'s work') # Kill connection         
                                                     
         # Close all files if they are open
         self.close_file(openOutputFile)

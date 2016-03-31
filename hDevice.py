@@ -18,7 +18,7 @@ class hDevice(device):
         if i == 0: # timeout
             errstr = 'Connection to ' + self.ip + ' timed out!'
             self.kill_dev(errstr)
-            self.state = -1
+            self.state = False
         elif i == 1: # new ssh key handling
             self.child.sendline('yes')
             # Missing the 'P' because some switches prompt
@@ -27,20 +27,20 @@ class hDevice(device):
             self.child.sendline(self.passwd)
             self.child.expect('>')
             self.expectString = ('>')
-            self.state = 0
+            self.state = True
         elif i == 2: # connection successful, send carriage return, then passwd
             self.child.sendline(self.passwd)
             self.child.expect('any key to continue')
             self.child.sendline('\n')
             self.child.expect('>')
             self.expectString = ('>')
-            self.state = 0
+            self.state = True
             print 'logged in'
         elif i == 3: # Connection failed
-            errstr = 'Connection to ' + self.ip + ''' failed. No SSH? Or SSH version
-            mismatch?'''
+            errstr = 'Connection to ' + self.ip + ''' failed. No SSH? SSH version
+            mismatch? Incorrect IP address?'''
             self.kill_dev(errstr)
-            self.state = -1
+            self.state = False
             
     def enable(self):
 
@@ -52,4 +52,5 @@ class hDevice(device):
         self.child.sendline(self.passwd)
         self.child.expect('#')
         self.expectString = ('#')
+        self.enabled = True
 
