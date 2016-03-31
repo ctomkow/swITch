@@ -10,7 +10,7 @@ can then dump the output to a file for later analysis.
 
 * Cisco switches
 
-* HP switches (mostly)
+* ~~HP switches~~ HP support is currently broken.  I borked it when I fixed the # bug for Cisco's.  I need to re-work some things.
 
 
 Note: the cDevice.py class (for Cisco devices) should work for many types of switches that
