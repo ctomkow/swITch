@@ -31,7 +31,7 @@ delimiter and stops.  Consequently you don't get the full output.  I have branch
 * I am also planning on creating an APC UPS class for managing APC UPS's over SSH. I found that cDevice.py works quite well for it however.
 * Multi-threading.  I am planning to make this multi-threaded so it will be more efficient at pushing out changes to many devices at once.
 * Allowing to specify which section of config in the cli.config file gets pushed out to certain IP ranges.  Then you can list all the config for various devices (e.g. multi-vendor devices). This will go well together with listing all the IPs in ip.list file.
-* Add ability to check whether you automatically get enabled when logged in or not.  Currently it expects to not be in enable when logged in.  Then it goes into enable mode only if -e flag is set. Coincidentally, I should be able to fix this once the hashtag bug is fixed.
+* ~~Add ability to check whether you automatically get enabled when logged in or not.  Currently it expects to not be in enable when logged in.  Then it goes into enable mode only if -e flag is set.~~
 * Enabling IP ranges using regex in ip.list
 * Enable the use of certificates so you don't need to rely on username and passwords sitting in a text file.
 * Proper display of program output.  E.g. -v -vv -vvv
