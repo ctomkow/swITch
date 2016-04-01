@@ -8,16 +8,8 @@
 #  !!!!!  NOTE TO SELF !!!!! 
 # In the send commands loop, its send/expect
 
-import sys
 import argparse
-
-import pexpect
-
-import cDevice
-import hDevice
-import dDevice
-
-import devThread
+from netmiko import ConnectHandler
 
 
 class swITch:
@@ -108,58 +100,37 @@ class swITch:
     
         for ip in QueueOfIPs:
             # IF CISCO, DO THIS
-            if ip.find('cisco') is not -1:
-                QueueOfCommands.insert(0, 'term length 0')
-                ip = ip.rstrip(',cisco')
-                #Object  filename.classname
-                dev = cDevice.cDevice(uname, passwd, ip, enPasswd, 'cisco')
-                dev.connect()
+            if ip.find('cisco_ios') is not -1:
+                ip = ip.rstrip(',cisco_ios')
+                ciscoDetails = {
+                    'device_type':'cisco_ios',
+                    'ip':ip,
+                    'username':uname,
+                    'password':passwd,
+                    'verbose': True}
+                dev = ConnectHandler(**ciscoDetails)
             # IF HP, DO THIS
-            elif ip.find('hp') is not -1:
-                QueueOfCommands.insert(0, 'term length 1000')
-                ip = ip.rstrip(',hp')
-                dev = hDevice.hDevice(uname, passwd, ip, enPasswd, 'hp') 
-                dev.connect()
-            # IF DELL, DO THIS
-            elif ip.find('dell') is not -1:
-                QueueOfCommands.insert(0, 'term length 0')
-                ip = ip.rstrip(',dell')
-                # Object  filename.classname
-                dev = dDevice.dDevice(uname, passwd, ip, enPasswd, 'dell')
-                dev.connect()
+            elif ip.find('hp_procurve') is not -1:
+                ip = ip.rstrip(',hp_procurve')
+                hpDetails = {
+                    'device_type':'hp_procurve',
+                    'ip':ip,
+                    'username':uname,
+                    'password':passwd,
+                    'verbose': True}
+                dev = ConnectHandler(**hpDetails)
             
-            if dev.state == True: # Continue because object is good
-                # Enable logic
-                if enable and not dev.enabled:
-                    dev.enable()
-                elif enable and dev.enabled:
-                    print """Ignoring -e flag, device already puts you in priveleged mode"""
-                elif not enable and not dev.enabled:
-                    print """Warning! No -e flag, not all commands may work!"""
-                elif not enable and dev.enabled:
-                    pass # Nothing to see here...
-                # Run all commands on this device
-                for cmd in QueueOfCommands: 
-                    dev.send(cmd)  
-                    if not dev.enabled:
-                        i = dev.expect([r"" + dev.hostname + ".*>$", pexpect.EOF, pexpect.TIMEOUT])
-                    if dev.enabled:
-                        i = dev.expect([r"" + dev.hostname + ".*#$", pexpect.EOF, pexpect.TIMEOUT])
-                    print dev.output()
-                    print dev.displayMatch()
-                    if i == 0: # command sent successfully
-                        self.write_to(openOutputFile, dev.output())
-                    elif i == 1: # EOF
-                        print 'EOF when expecting from: ' + cmd
-                    elif i == 2: # Timeout
-                        print 'Timeout when expecting from: ' + cmd
+            # Enable da switch
+            if enable:
+                dev.enable()
             
-            else:
-                print "Warning: device object for " + ip + " could not be created! Skipping " + ip
-                self.write_to(openOutputFile, "Skipped " + ip + " Could not create device object!")
-            if dev.state == True:
-                # Device ip cleanup
-                dev.kill_dev('Device is done it\'s work') # Kill connection         
+            # Run all commands on this device
+            for cmd in QueueOfCommands: 
+                output = dev.send_command(cmd)
+                print output
+                self.write_to(openOutputFile, output)
+
+            dev.disconnect()
                                                     
         # Close all files if they are open
         self.close_file(openOutputFile)

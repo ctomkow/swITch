@@ -5,37 +5,17 @@
 A python program which allows you to push commands to network devices.  It
 can then dump the output to a file for later analysis.
 
+I have decided to re-factor this code to work with Netmiko (work by Kirk Byers).
+Better to solve new problems instead of re-inventing the wheel.
+
 
 ### DEVICE SUPPORT
 
-* Cisco switches
-
-* ~~HP switches~~ HP support is currently broken.  I borked it when I fixed the # bug for Cisco's.  I need to re-work some things.
-
-
-Note: the cDevice.py class (for Cisco devices) should work for many types of switches that
-behave similar to Cisco IOS.
-
-
-### KNOWN BUGS
-
-* ~~There is a known bug with expecting on '#'.  If you have a hashtag anywhere 
-in the config (e.g. port label, or HP 'show runn') then expect hits the 
-delimiter and stops.  Consequently you don't get the full output.  I have branch open and I am working on fixing it.~~ Fixed for Cisco devices.  Once I get filtering of VT100 codes for HP's, then the fix can be easily applied to them as well.
-* HP Procurves send VT100 control codes over the session.  I need to filter this out.  Otherwise pushing changes to HP's do work, but the output is all messed up.
-
+* See https://github.com/ktbyers/netmiko (Currently Cisco IOS and HP Procurve)
 
 ### FUTURE DEVELOPMENT
 
-* I plan on creating more classes that support other devices like Dell, Juniper, etc.
-* I am also planning on creating an APC UPS class for managing APC UPS's over SSH. I found that cDevice.py works quite well for it however.
-* Multi-threading.  I am planning to make this multi-threaded so it will be more efficient at pushing out changes to many devices at once.
-* Allowing to specify which section of config in the cli.config file gets pushed out to certain IP ranges.  Then you can list all the config for various devices (e.g. multi-vendor devices). This will go well together with listing all the IPs in ip.list file.
-* ~~Add ability to check whether you automatically get enabled when logged in or not.  Currently it expects to not be in enable when logged in.  Then it goes into enable mode only if -e flag is set.~~
-* Enabling IP ranges using regex in ip.list
-* Enable the use of certificates so you don't need to rely on username and passwords sitting in a text file.
-* Proper display of program output.  E.g. -v -vv -vvv
-* In general, better error handling.
+* Allowing to specify which section of config in the cli.config file gets pushed out to certain IP ranges.  Then you can list all the config for various devices (e.g. multi-vendor devices).
 
 ### SETUP
 
@@ -43,18 +23,22 @@ delimiter and stops.  Consequently you don't get the full output.  I have branch
   * `sudo apt-get install python`
 
 
-2. Install pexpect
-  * `sudo apt-get install pexpect`
+2. Install paramiko
+  * `sudo apt-get install paramiko`
 
 
-3. Create the following files
+3. Install Netmiko
+  * `sudo pip install netmiko`
+
+
+4. Create the following files
 
   1. `ip.list` (1<sup>st</sup> - n<sup>th</sup> line: IP address, device type)
 
 
     ```
-    172.30.30.30,hp
-    172.30.30.31,cisco
+    172.30.30.30,hp_procurve
+    172.30.30.31,cisco_ios
     ```
 
 
@@ -99,7 +83,7 @@ Examples
 `$python ./swITch.py -h`
 
 
-`$python ./swITch.py -i '192.168.0.4,cisco' -c 'show vlan' -a auth.txt`
+`$python ./swITch.py -i '192.168.0.4,cisco_ios' -c 'show vlan' -a auth.txt`
 
 
 `$python ./swITch.py -e -i ip.list -c cli.config -a auth.txt`
