@@ -128,7 +128,7 @@ class swITch:
             # Run all commands on this device
             for cmd in list_of_commands: 
                 output = dev.send_command(cmd)
-                print cmd
+                print dev.find_prompt() + cmd
                 print output
                 self.write_to(output_file, output)
 
