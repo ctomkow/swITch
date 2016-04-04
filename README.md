@@ -11,7 +11,7 @@ Better to solve new problems instead of re-inventing the wheel.
 
 ### DEVICE SUPPORT
 
-* See https://github.com/ktbyers/netmiko (Currently Cisco IOS and HP Procurve)
+* See Currently Cisco and HP. I will be implementing support for the devices that netmiko does. https://github.com/ktbyers/netmiko
 
 ### FUTURE DEVELOPMENT
 
