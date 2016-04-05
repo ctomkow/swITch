@@ -207,7 +207,6 @@ class swITch:
         except IOError:
             if debug:
                 print 'Can\'t open file because I can\'t find file to open.'
-                self.write_to(output_file, 'Can\'t open file because I can\'t find file to open.')
             return -1
         return f
 
@@ -218,7 +217,6 @@ class swITch:
         except AttributeError:
             if debug:
                 print 'Can\'t close file due to no file attributes'
-                self.write_to(output_file, 'Can\'t open file because I can\'t find file to open.')
             else:
                 pass
 
