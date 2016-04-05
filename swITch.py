@@ -158,8 +158,8 @@ class swITch:
                 if verbose or debug:
                     print dev.find_prompt() + cmd
                 output = dev.send_command(cmd)
-                if verbose or debug:
-                    print dev.find_prompt() 
+                if debug:
+                    print "PROMPT:" + dev.find_prompt() 
                 if not suppress:
                     print output # default output, can be suppressed
                 self.write_to(output_file, output)
