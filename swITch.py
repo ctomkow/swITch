@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
 # Craig Tomkow
-# February 5, 2016
+# April 4, 2016
 #
-# Set a config to a list of switches, specified in config files
-#
-#  !!!!!  NOTE TO SELF !!!!! 
-# In the send commands loop, its send/expect
+# Send a config to a list of switches, specified in config files. Uses netmiko
+# for handling switch interaction.
 
 import argparse
 from netmiko import ConnectHandler
@@ -102,28 +100,27 @@ class swITch:
             # IF CISCO, DO THIS
             if ip.find('cisco_ios') is not -1:
                 ip = ip.rstrip(',cisco_ios')
-                ciscoDetails = {
+                cisco_details = {
                     'device_type':'cisco_ios',
                     'ip':ip,
                     'username':uname,
                     'password':passwd,
                     'secret':enable_passwd,
                     'verbose': True}
-                dev = ConnectHandler(**ciscoDetails)
+                dev = ConnectHandler(**cisco_details)
+                self.enable(dev)
             # IF HP, DO THIS
             elif ip.find('hp_procurve') is not -1:
                 ip = ip.rstrip(',hp_procurve')
-                hpDetails = {
+                hp_details = {
                     'device_type':'hp_procurve',
                     'ip':ip,
                     'username':uname,
                     'password':passwd,
+                    'secret':passwd,
                     'verbose': True}
-                dev = ConnectHandler(**hpDetails)
-            
-            # Enable da switch
-            if enable:
-                dev.enable()
+                dev = ConnectHandler(**hp_details)
+                self.enable(dev, uname)
             
             # Run all commands on this device
             for cmd in list_of_commands:
@@ -182,6 +179,13 @@ class swITch:
         elif str.endswith('\n'):
             str = str.rstrip('\n')
         return str
+
+    def enable(self, dev, enable_username=''):
+
+        if enable_username is '': # just a password
+            dev.enable()
+        else: # a username and password
+            dev.enable(default_username=enable_username) 
 
     
 if __name__=='__main__':
