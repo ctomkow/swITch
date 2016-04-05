@@ -71,21 +71,21 @@ class swITch:
     
         # Attempt to get file descriptors for each provided txt file
         if ip_list is not None:
-            ip_list_file = self.open_file(ip_list, 'r', suppress)
+            ip_list_file = self.open_file(ip_list, 'r', debug)
             if ip_list_file == -1:
                 if debug:
                     print 'Assuming this is an IP not a file'
                 ip_list_file = [ip_list] 
         if commands is not None:
-            cli_file = self.open_file(commands, 'r', suppress)
+            cli_file = self.open_file(commands, 'r', debug)
             if cli_file == -1:
                 if debug:
                     print 'Assuming this is a cmd not a file'
                 cli_file = [commands]
         if port_list is not None:
-            port_list_file = self.open_file(port_list, 'r', suppress)
-        output_file = self.open_file('output.log', 'a', suppress)   
-        access_file = self.open_file(auth, 'r', suppress)
+            port_list_file = self.open_file(port_list, 'r', debug)
+        output_file = self.open_file('output.log', 'a', debug)   
+        access_file = self.open_file(auth, 'r', debug)
         
         uname = access_file.readline()
         uname = self.strip_new_line(uname)      
@@ -161,22 +161,23 @@ class swITch:
                 if verbose or debug:
                     print dev.find_prompt() 
                 if not suppress:
-                    print output # default output
+                    print output # default output, can be suppressed
                 self.write_to(output_file, output)
 
             dev.disconnect()
+            print "SSH connection closed to " + ip # base output (even when -s)
                                                     
         # Close all files if they are open
         # Needs to determine if file is exists and is open or not...
-        self.close_file(output_file, suppress)
+        self.close_file(output_file, debug)
         if commands is not None:
-            self.close_file(cli_file, suppress)
+            self.close_file(cli_file, debug)
         if port_list is not None:
-            self.close_file(port_list_file, suppress)
+            self.close_file(port_list_file, debug)
         if ip_list_file is not None:
-            self.close_file(ip_list_file, suppress)
+            self.close_file(ip_list_file, debug)
         if access_file is not None:
-            self.close_file(access_file, suppress)
+            self.close_file(access_file, debug)
             
 #------------------ Methods -----------------------------------------
 # Handling files. Add exception handling in these methods. Should
@@ -184,22 +185,22 @@ class swITch:
 # class that these methods call...
 #--------------------------------------------------------------------
 
-    def open_file(self, file, operation, suppress):
+    def open_file(self, file, operation, debug):
 
         try:
             f = open(file, operation)
         except IOError:
-            if not suppress:
+            if debug:
                 print 'Can\'t open file because I can\'t find file to open.'
             return -1
         return f
 
-    def close_file(self, file, suppress):
+    def close_file(self, file, debug):
 
         try:
             file.close()
         except AttributeError:
-            if not suppress:
+            if debug:
                 print 'Can\'t close file due to no file attributes'
             else:
                 pass
