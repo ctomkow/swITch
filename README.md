@@ -77,8 +77,12 @@ Better to solve new problems instead of re-inventing the wheel.
 
 ### RUN
 
-Examples
+A common command sequence.
 
+`$python ./swITch.py -eva auth.txt -i ip.list -c 'show runn'`
+
+
+Other examples.
 
 `$python ./swITch.py -h`
 
@@ -90,3 +94,4 @@ Examples
 
 
 `$python ./swITch.py -e -i ip.list -p port.desc -a auth.txt`
+

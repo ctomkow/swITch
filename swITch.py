@@ -7,6 +7,8 @@
 # for handling switch interaction.
 
 import argparse
+from argparse import RawDescriptionHelpFormatter
+
 from netmiko import ConnectHandler
 
 
@@ -17,38 +19,53 @@ class swITch:
 
         # Arg Parsing
         parser = argparse.ArgumentParser(
-            description="""This program can log into devices using expect, issue
-            commands, and capture the result.""")
-        parser.add_argument('-e', '--enable', help='Privileged exec mode',
-            action='store_true', required=False)
-        parser.add_argument('-i', '--iplist', help="""Txt file with one IP per
-            line. Or a single IP in single quotes.""", required=True)
-        parser.add_argument('-c', '--commands', help="""Txt file with one device
+            description="""
+            This program logs into network devices using netmiko/paramiko, issue
+            commands, and capture the result in output.log \n
+            A typical example:\n
+            swITch.py -eva auth.txt -i 172.30.30.30,cisco_ios -c 'show vlan'
+            """,
+            formatter_class=RawDescriptionHelpFormatter,
+            add_help=False
+            )
+        reqFlags = parser.add_argument_group('Required flags')
+        optFlags = parser.add_argument_group('Optional flags')
+        reqFlags.add_argument('-a', '--auth', help="""Txt file with uername on first
+            line,passwd on second,enablePasswd on third.""", required=True)
+        optFlags.add_argument('-c', '--cmd', help="""Txt file with one device
             command per line. Or a single command in single quotes.""",
             required=False)
-        parser.add_argument('-a', '--auth', help="""Txt file with uname on first
-            line,passwd on second,enablePasswd on third""", required=True)
-        parser.add_argument('-p', '--portlist', help="""File that has interface
+        optFlags.add_argument('-d', '--debug', help="""Prints out additional session
+        action information beyond the default output and the verbose flag.
+        Debug is a superset of all the flags. Debug --> verbose --> default output --> suppress.""",
+        action='store_true', required=False)
+        optFlags.add_argument('-e', '--enable', help="""Privileged exec mode. Will be ignored
+        if the device drops you into privileged mode on login.""",
+            action='store_true', required=False)
+        optFlags.add_argument('-h', '--help', help="""show this help message and exit""",
+            action='help')
+        reqFlags.add_argument('-i', '--ip', help="""Txt file with one IP per
+            line. Or a single IP in single quotes.""", required=True)
+        optFlags.add_argument('-p', '--port', help="""File that has interface
             and port descriptions seperated by a comma per line. "int gi1/0/1 ,
             des C001".  Tip, use an excel sheet to generate the list.""",
             required=False)
-        parser.add_argument('-v', '--verbose', help="""Prints out additional cli
-        information.  This prints out the cli prompt and command sent""", 
+        optFlags.add_argument('-s', '--suppress', help="""Suppress most output.  Does
+        not print out the default output.
+        Suppress is a subset of the default output. Debug --> verbose --> default output --> suppress.""",
         action='store_true', required=False)
-        parser.add_argument('-s', '--suppress', help="""Suppress all output.  The
-        default without the -s flag is to print the output of all commands""",
-        action='store_true', required=False)
-        parser.add_argument('-d', '--debug', help="""Prints out additional session
-        action information.  Used to debug when things go wrong""",
+        optFlags.add_argument('-v', '--verbose', help="""Prints out additional cli
+        information.  This prints out the cli prompt and command sent.
+        Verbose is a subset of debug. Debug --> verbose --> default output --> suppress.""", 
         action='store_true', required=False)
         
         args = parser.parse_args()
     
-        self.main(args.enable, args.iplist, args.commands, args.auth,
-            args.portlist, args.verbose, args.suppress, args.debug)
+        self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
+            args.port, args.suppress, args.verbose)
 
     #-------------------- Main Loop ----------------------------------
-    def main(self, enable, ip_list, commands, auth, port_list, verbose, suppress, debug):      
+    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, verbose):      
     
         ##### FILE STUFF #####
     
@@ -138,10 +155,10 @@ class swITch:
             
             # Run all commands on this device
             for cmd in list_of_commands:
-                if verbose:
+                if verbose or debug:
                     print dev.find_prompt() + cmd
                 output = dev.send_command(cmd)
-                if verbose:
+                if verbose or debug:
                     print dev.find_prompt() 
                 if not suppress:
                     print output # default output
