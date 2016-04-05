@@ -162,17 +162,19 @@ class swITch:
                     print output
                     self.write_to(output_file, output)
                 output = dev.send_command(cmd)
-                self.write_to(output_file, output)
                 if not suppress:
                     print output #default output, can be suppressed
+                    self.write_to(output_file, output)
                 if debug:
                     output = "PROMPT:" + dev.find_prompt() 
                     print output
                     self.write_to(output_file, output)
 
             dev.disconnect()
-            print "SSH connection closed to " + ip # base output (even when -s)
-                                                    
+            if not suppress:
+                output = "SSH connection closed to " + ip # base output, can be suppressed
+                self.write_to(output_file, output)
+                
         # Close all files if they are open
         # Needs to determine if file is exists and is open or not...
         self.close_file(output_file, debug)
