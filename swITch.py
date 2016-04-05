@@ -32,31 +32,43 @@ class swITch:
             and port descriptions seperated by a comma per line. "int gi1/0/1 ,
             des C001".  Tip, use an excel sheet to generate the list.""",
             required=False)
+        parser.add_argument('-v', '--verbose', help="""Prints out additional cli
+        information.  This prints out the cli prompt and command sent""", 
+        action='store_true', required=False)
+        parser.add_argument('-s', '--suppress', help="""Suppress all output.  The
+        default without the -s flag is to print the output of all commands""",
+        action='store_true', required=False)
+        parser.add_argument('-d', '--debug', help="""Prints out additional session
+        action information.  Used to debug when things go wrong""",
+        action='store_true', required=False)
+        
         args = parser.parse_args()
     
         self.main(args.enable, args.iplist, args.commands, args.auth,
-            args.portlist)
+            args.portlist, args.verbose, args.suppress, args.debug)
 
     #-------------------- Main Loop ----------------------------------
-    def main(self, enable, ip_list, commands, auth, port_list):      
+    def main(self, enable, ip_list, commands, auth, port_list, verbose, suppress, debug):      
     
         ##### FILE STUFF #####
     
         # Attempt to get file descriptors for each provided txt file
         if ip_list is not None:
-            ip_list_file = self.open_file(ip_list, 'r')
+            ip_list_file = self.open_file(ip_list, 'r', suppress)
             if ip_list_file == -1:
-                print 'Hokay, assuming this is an IP not a file'
+                if debug:
+                    print 'Assuming this is an IP not a file'
                 ip_list_file = [ip_list] 
         if commands is not None:
-            cli_file = self.open_file(commands, 'r')
+            cli_file = self.open_file(commands, 'r', suppress)
             if cli_file == -1:
-                print 'Hokay, assuming this is a cmd not a file'
+                if debug:
+                    print 'Assuming this is a cmd not a file'
                 cli_file = [commands]
         if port_list is not None:
-            port_list_file = self.open_file(port_list, 'r')
-        output_file = self.open_file('output.txt', 'a')   
-        access_file = self.open_file(auth, 'r')
+            port_list_file = self.open_file(port_list, 'r', suppress)
+        output_file = self.open_file('output.log', 'a', suppress)   
+        access_file = self.open_file(auth, 'r', suppress)
         
         uname = access_file.readline()
         uname = self.strip_new_line(uname)      
@@ -108,7 +120,8 @@ class swITch:
                     'secret':enable_passwd,
                     'verbose': True}
                 dev = ConnectHandler(**cisco_details)
-                self.enable(dev)
+                if enable:
+                    self.enable(dev)
             # IF HP, DO THIS
             elif ip.find('hp_procurve') is not -1:
                 ip = ip.rstrip(',hp_procurve')
@@ -120,29 +133,33 @@ class swITch:
                     'secret':passwd,
                     'verbose': True}
                 dev = ConnectHandler(**hp_details)
-                self.enable(dev, uname)
+                if enable:
+                    self.enable(dev, uname)
             
             # Run all commands on this device
             for cmd in list_of_commands:
-                print dev.find_prompt() + cmd
+                if verbose:
+                    print dev.find_prompt() + cmd
                 output = dev.send_command(cmd)
-                print dev.find_prompt()
-                print output
+                if verbose:
+                    print dev.find_prompt() 
+                if not suppress:
+                    print output # default output
                 self.write_to(output_file, output)
 
             dev.disconnect()
                                                     
         # Close all files if they are open
         # Needs to determine if file is exists and is open or not...
-        self.close_file(output_file)
+        self.close_file(output_file, suppress)
         if commands is not None:
-            self.close_file(cli_file)
+            self.close_file(cli_file, suppress)
         if port_list is not None:
-            self.close_file(port_list_file)
+            self.close_file(port_list_file, suppress)
         if ip_list_file is not None:
-            self.close_file(ip_list_file)
+            self.close_file(ip_list_file, suppress)
         if access_file is not None:
-            self.close_file(access_file)
+            self.close_file(access_file, suppress)
             
 #------------------ Methods -----------------------------------------
 # Handling files. Add exception handling in these methods. Should
@@ -150,21 +167,25 @@ class swITch:
 # class that these methods call...
 #--------------------------------------------------------------------
 
-    def open_file(self, file, operation):
+    def open_file(self, file, operation, suppress):
 
         try:
             f = open(file, operation)
         except IOError:
-            print 'Can\'t open file because I can\'t find file to open.'
+            if not suppress:
+                print 'Can\'t open file because I can\'t find file to open.'
             return -1
         return f
 
-    def close_file(self, file):
+    def close_file(self, file, suppress):
 
         try:
             file.close()
         except AttributeError:
-            print 'Can\'t close file due to no file attributes'
+            if not suppress:
+                print 'Can\'t close file due to no file attributes'
+            else:
+                pass
 
     def write_to(self, file, str):
 
