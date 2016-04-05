@@ -140,8 +140,8 @@ class swITch:
                     'verbose': not suppress}
                 dev = ConnectHandler(**cisco_details)
                 if not suppress:
-                    output = "SSH connection open to " + ip + "\n"
-                    self.write_to(output_file, output)
+                    output = "SSH connection open to " + ip
+                    self.write_to(output_file, output + "\n")
                 if enable:
                     self.enable(dev)
             # IF HP, DO THIS
@@ -156,17 +156,17 @@ class swITch:
                     'verbose': not suppress}
                 dev = ConnectHandler(**hp_details)
                 if not suppress:
-                    output = "SSH connection open to " + ip + "\n"
-                    self.write_to(output_file, output)
+                    output = "SSH connection open to " + ip
+                    self.write_to(output_file, output + "\n")
                 if enable:
                     self.enable(dev, uname)
             
             # Run all commands on this device
             for cmd in list_of_commands:
                 if verbose or debug:
-                    output = dev.find_prompt() + cmd + "\n"
+                    output = dev.find_prompt() + cmd
                     print output
-                    self.write_to(output_file, output)
+                    self.write_to(output_file, output + "\n")
                     
                 output = dev.send_command(cmd)
                 if not suppress:
@@ -174,15 +174,15 @@ class swITch:
                     self.write_to(output_file, output)
                     
                 if debug:
-                    output = "PROMPT:" + dev.find_prompt() + "\n" 
+                    output = "PROMPT:" + dev.find_prompt() 
                     print output
-                    self.write_to(output_file, output)
+                    self.write_to(output_file, output + "\n")
 
             dev.disconnect()
             if not suppress:
-                output = "SSH connection closed to " + ip + "\n" # base output, can be suppressed
+                output = "SSH connection closed to " + ip # base output, can be suppressed
                 print output
-                self.write_to(output_file, output)
+                self.write_to(output_file, output + "\n")
                 
         # Close all files if they are open
         # Needs to determine if file is exists and is open or not...
