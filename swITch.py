@@ -50,8 +50,8 @@ class swITch:
             and port descriptions seperated by a comma per line. "int gi1/0/1 ,
             des C001".  Tip, use an excel sheet to generate the list.""",
             required=False)
-        optFlags.add_argument('-s', '--suppress', help="""Suppress most output.  Does
-        not print out the default output.
+        optFlags.add_argument('-s', '--suppress', help="""Suppress all output.  What
+        is happening?! OOOoooOOoOOOO!
         Suppress is a subset of the default output. Debug --> verbose --> default output --> suppress.""",
         action='store_true', required=False)
         optFlags.add_argument('-v', '--verbose', help="""Prints out additional cli
@@ -70,21 +70,23 @@ class swITch:
         ##### FILE STUFF #####
     
         # Attempt to get file descriptors for each provided txt file
+        output_file = self.open_file('output.log', 'a', debug)
         if ip_list is not None:
             ip_list_file = self.open_file(ip_list, 'r', debug)
             if ip_list_file == -1:
                 if debug:
                     print 'Assuming this is an IP not a file'
+                    self.write_to(output_file, 'Assuming this is an IP not a file')
                 ip_list_file = [ip_list] 
         if commands is not None:
             cli_file = self.open_file(commands, 'r', debug)
             if cli_file == -1:
                 if debug:
                     print 'Assuming this is a cmd not a file'
+                    self.write_to(output_file, 'Assuming this is a cmd not a file')
                 cli_file = [commands]
         if port_list is not None:
             port_list_file = self.open_file(port_list, 'r', debug)
-        output_file = self.open_file('output.log', 'a', debug)   
         access_file = self.open_file(auth, 'r', debug)
         
         uname = access_file.readline()
@@ -135,7 +137,7 @@ class swITch:
                     'username':uname,
                     'password':passwd,
                     'secret':enable_passwd,
-                    'verbose': True}
+                    'verbose': not suppress}
                 dev = ConnectHandler(**cisco_details)
                 if enable:
                     self.enable(dev)
@@ -148,7 +150,7 @@ class swITch:
                     'username':uname,
                     'password':passwd,
                     'secret':passwd,
-                    'verbose': True}
+                    'verbose': not suppress}
                 dev = ConnectHandler(**hp_details)
                 if enable:
                     self.enable(dev, uname)
@@ -156,13 +158,17 @@ class swITch:
             # Run all commands on this device
             for cmd in list_of_commands:
                 if verbose or debug:
-                    print dev.find_prompt() + cmd
+                    output = dev.find_prompt() + cmd
+                    print output
+                    self.write_to(output_file, output)
                 output = dev.send_command(cmd)
-                if debug:
-                    print "PROMPT:" + dev.find_prompt() 
-                if not suppress:
-                    print output # default output, can be suppressed
                 self.write_to(output_file, output)
+                if not suppress:
+                    print output #default output, can be suppressed
+                if debug:
+                    output = "PROMPT:" + dev.find_prompt() 
+                    print output
+                    self.write_to(output_file, output)
 
             dev.disconnect()
             print "SSH connection closed to " + ip # base output (even when -s)
@@ -179,11 +185,9 @@ class swITch:
         if access_file is not None:
             self.close_file(access_file, debug)
             
-#------------------ Methods -----------------------------------------
-# Handling files. Add exception handling in these methods. Should
-# these methods be in a class? There is already the python file
-# class that these methods call...
-#--------------------------------------------------------------------
+#-------------------------- Methods ---------------------------------#
+#      Handling files.                                               #
+#--------------------------------------------------------------------#
 
     def open_file(self, file, operation, debug):
 
@@ -192,6 +196,7 @@ class swITch:
         except IOError:
             if debug:
                 print 'Can\'t open file because I can\'t find file to open.'
+                self.write_to(output_file, 'Can\'t open file because I can\'t find file to open.')
             return -1
         return f
 
@@ -202,6 +207,7 @@ class swITch:
         except AttributeError:
             if debug:
                 print 'Can\'t close file due to no file attributes'
+                self.write_to(output_file, 'Can\'t open file because I can\'t find file to open.')
             else:
                 pass
 
