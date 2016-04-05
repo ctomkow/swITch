@@ -139,6 +139,9 @@ class swITch:
                     'secret':enable_passwd,
                     'verbose': not suppress}
                 dev = ConnectHandler(**cisco_details)
+                if not suppress:
+                    output = "SSH connection open to " + ip
+                    self.write_to(output_file, output)
                 if enable:
                     self.enable(dev)
             # IF HP, DO THIS
@@ -152,6 +155,9 @@ class swITch:
                     'secret':passwd,
                     'verbose': not suppress}
                 dev = ConnectHandler(**hp_details)
+                if not suppress:
+                    output = "SSH connection open to " + ip
+                    self.write_to(output_file, output)
                 if enable:
                     self.enable(dev, uname)
             
@@ -161,10 +167,12 @@ class swITch:
                     output = dev.find_prompt() + cmd
                     print output
                     self.write_to(output_file, output)
+                    
                 output = dev.send_command(cmd)
                 if not suppress:
                     print output #default output, can be suppressed
                     self.write_to(output_file, output)
+                    
                 if debug:
                     output = "PROMPT:" + dev.find_prompt() 
                     print output
@@ -173,6 +181,7 @@ class swITch:
             dev.disconnect()
             if not suppress:
                 output = "SSH connection closed to " + ip # base output, can be suppressed
+                print output
                 self.write_to(output_file, output)
                 
         # Close all files if they are open
