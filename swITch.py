@@ -76,14 +76,14 @@ class swITch:
             if ip_list_file == -1:
                 if debug:
                     print 'Assuming this is an IP not a file'
-                    self.write_to(output_file, 'Assuming this is an IP not a file')
+                    self.write_to(output_file, 'Assuming this is an IP not a file' + "\n")
                 ip_list_file = [ip_list] 
         if commands is not None:
             cli_file = self.open_file(commands, 'r', debug)
             if cli_file == -1:
                 if debug:
                     print 'Assuming this is a cmd not a file'
-                    self.write_to(output_file, 'Assuming this is a cmd not a file')
+                    self.write_to(output_file, 'Assuming this is a cmd not a file' + "\n")
                 cli_file = [commands]
         if port_list is not None:
             port_list_file = self.open_file(port_list, 'r', debug)
@@ -140,7 +140,7 @@ class swITch:
                     'verbose': not suppress}
                 dev = ConnectHandler(**cisco_details)
                 if not suppress:
-                    output = "SSH connection open to " + ip
+                    output = "SSH connection open to " + ip + "\n"
                     self.write_to(output_file, output)
                 if enable:
                     self.enable(dev)
@@ -156,7 +156,7 @@ class swITch:
                     'verbose': not suppress}
                 dev = ConnectHandler(**hp_details)
                 if not suppress:
-                    output = "SSH connection open to " + ip
+                    output = "SSH connection open to " + ip + "\n"
                     self.write_to(output_file, output)
                 if enable:
                     self.enable(dev, uname)
@@ -164,7 +164,7 @@ class swITch:
             # Run all commands on this device
             for cmd in list_of_commands:
                 if verbose or debug:
-                    output = dev.find_prompt() + cmd
+                    output = dev.find_prompt() + cmd + "\n"
                     print output
                     self.write_to(output_file, output)
                     
@@ -174,13 +174,13 @@ class swITch:
                     self.write_to(output_file, output)
                     
                 if debug:
-                    output = "PROMPT:" + dev.find_prompt() 
+                    output = "PROMPT:" + dev.find_prompt() + "\n" 
                     print output
                     self.write_to(output_file, output)
 
             dev.disconnect()
             if not suppress:
-                output = "SSH connection closed to " + ip # base output, can be suppressed
+                output = "SSH connection closed to " + ip + "\n" # base output, can be suppressed
                 print output
                 self.write_to(output_file, output)
                 
