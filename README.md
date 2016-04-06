@@ -82,7 +82,12 @@ Better to solve new problems instead of re-inventing the wheel.
 
 A common command sequence.
 
-`$python ./swITch.py -eva auth.txt -i ip.list -c 'show runn'`
+`$python ./swITch.py -eva auth.txt -i ip.list -c 'show runn'
+
+
+Or to be concise...err convoluted. (argparse uses defaults, e.g. ip.list, auth.txt, cli.config)
+
+`$python ./swITch.py -eviac`
 
 
 Other examples.
