@@ -6,9 +6,9 @@
 # Send a config to a list of switches, specified in config files. Uses netmiko
 # for handling switch interaction.
 
-import argparse
-from argparse import RawDescriptionHelpFormatter
 
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
 from netmiko import ConnectHandler
 
 
@@ -18,83 +18,96 @@ class swITch:
     def __init__(self):
 
         # Arg Parsing
-        parser = argparse.ArgumentParser(
+        parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter, add_help=False,
             description="""
             This program logs into network devices using netmiko/paramiko, issue
             commands, and capture the result in output.log \n
             A typical example:\n
-            swITch.py -eva auth.txt -i 172.30.30.30,cisco_ios -c 'show vlan'
-            """,
-            formatter_class=RawDescriptionHelpFormatter,
-            add_help=False
-            )
+            swITch.py -eva auth.txt -i 172.30.30.30,cisco_ios -c 'show vlan'""")
+            
         reqFlags = parser.add_argument_group('Required flags')
+        reqFlags.add_argument('-a', '--auth', required=True,
+            help="""Txt file with username on first line, passwd on second,
+            enablePasswd on third.""")
+        reqFlags.add_argument('-i', '--ip', required=True, 
+            help="""Txt file with one IP per line. Or a single IP in single 
+            quotes.""")
+            
         optFlags = parser.add_argument_group('Optional flags')
-        reqFlags.add_argument('-a', '--auth', help="""Txt file with uername on first
-            line,passwd on second,enablePasswd on third.""", required=True)
-        optFlags.add_argument('-c', '--cmd', help="""Txt file with one device
-            command per line. Or a single command in single quotes.""",
-            required=False)
-        optFlags.add_argument('-d', '--debug', help="""Prints out additional session
-        action information beyond the default output and the verbose flag.
-        Debug is a superset of all the flags. Debug --> verbose --> default output --> suppress.""",
-        action='store_true', required=False)
-        optFlags.add_argument('-e', '--enable', help="""Privileged exec mode. Will be ignored
-        if the device drops you into privileged mode on login.""",
-            action='store_true', required=False)
-        optFlags.add_argument('-h', '--help', help="""show this help message and exit""",
-            action='help')
-        reqFlags.add_argument('-i', '--ip', help="""Txt file with one IP per
-            line. Or a single IP in single quotes.""", required=True)
-        optFlags.add_argument('-p', '--port', help="""File that has interface
-            and port descriptions seperated by a comma per line. "int gi1/0/1 ,
-            des C001".  Tip, use an excel sheet to generate the list.""",
-            required=False)
-        optFlags.add_argument('-s', '--suppress', help="""Suppress all output.  What
-        is happening?! OOOoooOOoOOOO!
-        Suppress is a subset of the default output. Debug --> verbose --> default output --> suppress.""",
-        action='store_true', required=False)
-        optFlags.add_argument('-v', '--verbose', help="""Prints out additional cli
-        information.  This prints out the cli prompt and command sent.
-        Verbose is a subset of debug. Debug --> verbose --> default output --> suppress.""", 
-        action='store_true', required=False)
+        optFlags.add_argument('-c', '--cmd', required=False,
+            help="""Txt file with one device command per line. Or a single 
+            command in single quotes.""")
+        optFlags.add_argument('-d', '--debug', required=False, action='store_true',
+            help="""Prints out additional session action information beyond 
+            the default output and the verbose flag. Debug is a superset of all
+            the flags. Debug --> verbose --> default output --> suppress.""")
+        optFlags.add_argument('-e', '--enable', action='store_true', required=False,
+            help="""Privileged exec mode. Will be ignored if the device drops 
+            you into privileged mode on login.""")
+        optFlags.add_argument('-h', '--help', action='help', 
+            help="""show this help message and exit""")
+        optFlags.add_argument('-p', '--port', required=False, 
+            help="""File that has interface and port descriptions seperated 
+            by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
+            sheet to generate the list.""")
+        optFlags.add_argument('-s', '--suppress', action='store_true', required=False,
+            help="""Suppress all output.  What is happening?! OOOoooOOoOOOO! Suppress 
+            is a subset of the default output. Debug --> verbose --> 
+            default output --> suppress.""")
+        optFlags.add_argument('-v', '--verbose', action='store_true', required=False,
+            help="""Prints out additional cli information.  This prints out the 
+            cli prompt and command sent. Verbose is a subset of debug. 
+            Debug --> verbose --> default output --> suppress.""")
         
         args = parser.parse_args()
     
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
             args.port, args.suppress, args.verbose)
 
-    #-------------------- Main Loop ----------------------------------
+    #--------------------------------------------------------------------------#
+    #                               Main Loop                                  #
+    #--------------------------------------------------------------------------#
     def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, verbose):      
     
-        ##### FILE STUFF #####
+        ### FILE STUFF ###
     
         # Attempt to get file descriptors for each provided txt file
-        output_file = self.open_file('output.log', 'a', debug)
+        output_file = self.open_file('output.log', 'a')
+        
         if ip_list is not None:
-            ip_list_file = self.open_file(ip_list, 'r', debug)
+            ip_list_file = self.open_file(ip_list, 'r')
             if ip_list_file == -1:
                 if debug:
-                    print 'Assuming this is an IP not a file'
-                    self.write_to(output_file, 'Assuming this is an IP not a file' + "\n")
+                    print 'Not a file.  Assuming it\'s an IP address'
+                    self.write_to(output_file, 'Not a file.  Assuming it\'s an IP address' + "\n")
                 ip_list_file = [ip_list] 
         if commands is not None:
-            cli_file = self.open_file(commands, 'r', debug)
+            cli_file = self.open_file(commands, 'r')
             if cli_file == -1:
                 if debug:
-                    print 'Assuming this is a cmd not a file'
-                    self.write_to(output_file, 'Assuming this is a cmd not a file' + "\n")
+                    print 'Not a file. Assuming it\'s a cli command'
+                    self.write_to(output_file, 'Not a file. Assuming it\'s a cli command' + "\n")
                 cli_file = [commands]
         if port_list is not None:
-            port_list_file = self.open_file(port_list, 'r', debug)
-        access_file = self.open_file(auth, 'r', debug)
-        
-        uname = access_file.readline()
-        uname = self.strip_new_line(uname)      
-        passwd = access_file.readline()
-        passwd = self.strip_new_line(passwd)       
-        enable_passwd = access_file.readline()
-        enable_passwd = self.strip_new_line(enable_passwd)
+            port_list_file = self.open_file(port_list, 'r')
+            if port_list_file == -1:
+                if debug:
+                    print 'Can\'t open port list file'
+                    self.write_to(output_file, 'Can\'t open port list file.' + "\n")
+                pass
+        if auth is not None:
+            access_file = self.open_file(auth, 'r') 
+            if access_file == -1:
+                if debug:
+                    print 'Can\'t open authentication file'
+                    self.write_to(output_file, 'Can\'t open port list file.' + "\n")
+                pass
+        raw_uname = access_file.readline()
+        uname = self.strip_new_line(raw_uname)      
+        raw_passwd = access_file.readline()
+        passwd = self.strip_new_line(raw_passwd)       
+        raw_enable_passwd = access_file.readline()
+        enable_passwd = self.strip_new_line(raw_enable_passwd)
 
         # Initialize IP and command lists
         list_of_commands = []
@@ -102,8 +115,8 @@ class swITch:
 
         # Parse port description file
         if port_list is not None: 
-            for cmd in port_list_file:
-                cmd = self.strip_new_line(cmd)
+            for raw_cmd in port_list_file:
+                cmd = self.strip_new_line(raw_cmd)
                 if cmd.find(',') == -1:
                     list_of_commands.append(cmd)
                 else:
@@ -116,19 +129,19 @@ class swITch:
                     list_of_commands.append(description_cmd)
         # Parse cli commands
         if commands is not None:    
-            for cmd in cli_file:
-                cmd = self.strip_new_line(cmd)
+            for raw_cmd in cli_file:
+                cmd = self.strip_new_line(raw_cmd)
                 list_of_commands.append(cmd) 
         # Parse IPs from file
         if ip_list is not None:
-            for ip in ip_list_file:
-                ip = self.strip_new_line(ip)
+            for raw_ip in ip_list_file:
+                ip = self.strip_new_line(raw_ip)
                 list_of_IPs.append(ip)
         
-        ##### SWITCH CONNECTION AND EXECUTION LOGIC #####  
+        ### SWITCH CONNECTION AND EXECUTION LOGIC ###  
     
         for ip in list_of_IPs:
-            # IF CISCO, DO THIS
+            # If Cisco...
             if ip.find('cisco_ios') is not -1:
                 ip = ip.rstrip(',cisco_ios')
                 cisco_details = {
@@ -144,7 +157,7 @@ class swITch:
                     self.write_to(output_file, output + "\n")
                 if enable:
                     self.enable(dev)
-            # IF HP, DO THIS
+            # If HP...
             elif ip.find('hp_procurve') is not -1:
                 ip = ip.rstrip(',hp_procurve')
                 hp_details = {
@@ -168,9 +181,9 @@ class swITch:
                     print output
                     self.write_to(output_file, output + "\n")
                     
-                output = dev.send_command(cmd)
+                output = dev.send_command(cmd) # send command
                 if not suppress:
-                    print output #default output, can be suppressed
+                    print output # default output, can be suppressed
                     self.write_to(output_file, output)
                     
                 if debug:
@@ -183,42 +196,65 @@ class swITch:
                 output = "SSH connection closed to " + ip # base output, can be suppressed
                 print output
                 self.write_to(output_file, output + "\n")
-                
+ 
+        ### CLEANUP ###
+        
         # Close all files if they are open
-        # Needs to determine if file is exists and is open or not...
-        self.close_file(output_file, debug)
+        if output_file is not None:
+            op_code = self.close_file(output_file)
+            if op_code == -1:
+                if debug:
+                    print 'Can\'t close output.log file'
+                    self.write_to(output_file, 'Can\'t close output.log file' + "\n")
+                pass
         if commands is not None:
-            self.close_file(cli_file, debug)
+            op_code = self.close_file(cli_file)
+            if op_code == -1:
+                if debug:
+                    print 'Can\'t close cli file'
+                    self.write_to(output_file, 'Can\'t close cli file' + "\n")
+                pass
         if port_list is not None:
-            self.close_file(port_list_file, debug)
+            op_code = self.close_file(port_list_file)
+            if op_code == -1:
+                if debug:
+                    print 'Can\'t close port list file'
+                    self.write_to(output_file, 'Can\'t close port list file' + "\n")
+                pass
         if ip_list_file is not None:
-            self.close_file(ip_list_file, debug)
+            op_code = self.close_file(ip_list_file)
+            if op_code == -1:
+                if debug:
+                    print 'Can\'t close ip list file'
+                    self.write_to(output_file, 'Can\'t close ip list file' + "\n")
+                pass
         if access_file is not None:
-            self.close_file(access_file, debug)
+            op_code = self.close_file(access_file)
+            if op_code == -1:
+                if debug:
+                    print 'Can\'t close access file'
+                    self.write_to(output_file, 'Can\'t close access file' + "\n")
+                pass
             
-#-------------------------- Methods ---------------------------------#
-#      Handling files.                                               #
-#--------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
+#                                  Methods                                     #
+#------------------------------------------------------------------------------#
 
-    def open_file(self, file, operation, debug):
+    def open_file(self, file, operation):
 
         try:
             f = open(file, operation)
         except IOError:
-            if debug:
-                print 'Can\'t open file because I can\'t find file to open.'
             return -1
         return f
 
-    def close_file(self, file, debug):
+    def close_file(self, file):
 
         try:
             file.close()
         except AttributeError:
-            if debug:
-                print 'Can\'t close file due to no file attributes'
-            else:
-                pass
+            return -1
+        return 0
 
     def write_to(self, file, str):
 
@@ -238,7 +274,7 @@ class swITch:
 
         if enable_username is '': # just a password
             dev.enable()
-        else: # a username and password
+        else: # username and password
             dev.enable(default_username=enable_username) 
 
     
