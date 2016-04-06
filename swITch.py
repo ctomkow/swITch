@@ -26,15 +26,15 @@ class swITch:
             swITch.py -eva auth.txt -i 172.30.30.30,cisco_ios -c 'show vlan'""")
             
         reqFlags = parser.add_argument_group('Required flags')
-        reqFlags.add_argument('-a', '--auth', required=True, default='auth.txt',
+        reqFlags.add_argument('-a', '--auth', required=True,
             help="""Txt file with username on first line, passwd on second,
             enablePasswd on third.""")
-        reqFlags.add_argument('-i', '--ip', required=True, default='ip.list', 
+        reqFlags.add_argument('-i', '--ip', required=True, 
             help="""Txt file with one IP per line. Or a single IP in single 
             quotes.""")
             
         optFlags = parser.add_argument_group('Optional flags')
-        optFlags.add_argument('-c', '--cmd', required=False, default='cli.config',
+        optFlags.add_argument('-c', '--cmd', required=False,
             help="""Txt file with one device command per line. Or a single 
             command in single quotes.""")
         optFlags.add_argument('-d', '--debug', required=False, action='store_true',
@@ -46,7 +46,7 @@ class swITch:
             you into privileged mode on login.""")
         optFlags.add_argument('-h', '--help', action='help', 
             help="""show this help message and exit""")
-        optFlags.add_argument('-p', '--port', required=False, default='port.list',
+        optFlags.add_argument('-p', '--port', required=False, 
             help="""File that has interface and port descriptions seperated 
             by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
             sheet to generate the list.""")
