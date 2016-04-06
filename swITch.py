@@ -201,13 +201,6 @@ class swITch:
         ### CLEANUP ###
         
         # Close all files if they are open
-        if output_file is not None:
-            op_code = self.close_file(output_file)
-            if op_code == -1:
-                if debug:
-                    print 'Can\'t close output.log file'
-                    self.write_to(output_file, 'Can\'t close output.log file' + "\n")
-                pass
         if commands is not None:
             op_code = self.close_file(cli_file)
             if op_code == -1:
@@ -235,6 +228,15 @@ class swITch:
                 if debug:
                     print 'Can\'t close access file'
                     self.write_to(output_file, 'Can\'t close access file' + "\n")
+                pass
+            
+        # Last thing, close the output file
+        if output_file is not None:
+            op_code = self.close_file(output_file)
+            if op_code == -1:
+                if debug:
+                    print 'Can\'t close output.log file'
+                    self.write_to(output_file, 'Can\'t close output.log file' + "\n")
                 pass
             
 #------------------------------------------------------------------------------#
