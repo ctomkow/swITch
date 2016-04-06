@@ -72,7 +72,7 @@ class swITch:
         ### FILE STUFF ###
     
         # Attempt to get file descriptors for each provided txt file
-        output_file = self.open_file('output.log', 'a')
+        output_file = self.open_file('output.log', 'w')
         
         if ip_list is not None:
             ip_list_file = self.open_file(ip_list, 'r')
@@ -102,6 +102,7 @@ class swITch:
                     print 'Can\'t open authentication file'
                     self.write_to(output_file, 'Can\'t open port list file.' + "\n")
                 pass
+            
         raw_uname = access_file.readline()
         uname = self.strip_new_line(raw_uname)      
         raw_passwd = access_file.readline()
