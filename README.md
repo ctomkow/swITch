@@ -11,7 +11,10 @@ Better to solve new problems instead of re-inventing the wheel.
 
 ### DEVICE SUPPORT
 
-* See Currently Cisco and HP. I will be implementing support for the devices that netmiko does. https://github.com/ktbyers/netmiko
+* Currently Cisco and HP. I will be implementing support for the devices that netmiko does. https://github.com/ktbyers/netmiko
+* What to append at the end of each IP address
+  * `,cisco_ios`
+  * `,hp_procurve`
 
 ### FUTURE DEVELOPMENT
 
