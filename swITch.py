@@ -9,7 +9,7 @@
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-from netmiko import ConnectHandler
+from netmiko import ConnectHandler, FileTransfer
 
 
 class swITch:
@@ -32,29 +32,36 @@ class swITch:
         reqFlags.add_argument('-i', '--ip', required=True, 
             help="""Txt file with one IP per line. Or a single IP in single 
             quotes.""")
-            
-        optFlags = parser.add_argument_group('Optional flags')
-        optFlags.add_argument('-c', '--cmd', required=False,
-            help="""Txt file with one device command per line. Or a single 
-            command in single quotes.""")
-        optFlags.add_argument('-d', '--debug', required=False, action='store_true',
-            help="""Prints out additional session action information beyond 
-            the default output and the verbose flag. Debug is a superset of all
-            the flags. Debug --> verbose --> default output --> suppress.""")
+      
+        optFlags = parser.add_argument_group('Privilege level')
         optFlags.add_argument('-e', '--enable', action='store_true', required=False,
             help="""Privileged exec mode. Will be ignored if the device drops 
             you into privileged mode on login.""")
-        optFlags.add_argument('-h', '--help', action='help', 
-            help="""show this help message and exit""")
-        optFlags.add_argument('-p', '--port', required=False, 
+           
+        mutExclusiveFlags = parser.add_mutually_exclusive_group()
+        mutExclusiveFlags.add_argument('-c', '--cmd', required=False,
+            help="""Txt file with one device command per line. Or a single 
+            command in single quotes.""")
+        mutExclusiveFlags.add_argument('-f', '--file', required=False,
+            help="""File name that will be transfered to device. Usually an image
+            upgrade file.""")
+        mutExclusiveFlags.add_argument('-p', '--port', required=False, 
             help="""File that has interface and port descriptions seperated 
             by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
             sheet to generate the list.""")
-        optFlags.add_argument('-s', '--suppress', action='store_true', required=False,
+            
+        outputFlags = parser.add_argument_group('Output flags')
+        outputFlags.add_argument('-d', '--debug', required=False, action='store_true',
+            help="""Prints out additional session action information beyond 
+            the default output and the verbose flag. Debug is a superset of all
+            the flags. Debug --> verbose --> default output --> suppress.""")
+        outputFlags.add_argument('-h', '--help', action='help', 
+            help="""show this help message and exit""")
+        outputFlags.add_argument('-s', '--suppress', action='store_true', required=False,
             help="""Suppress all output.  What is happening?! OOOoooOOoOOOO! Suppress 
             is a subset of the default output. Debug --> verbose --> 
             default output --> suppress.""")
-        optFlags.add_argument('-v', '--verbose', action='store_true', required=False,
+        outputFlags.add_argument('-v', '--verbose', action='store_true', required=False,
             help="""Prints out additional cli information.  This prints out the 
             cli prompt and command sent. Verbose is a subset of debug. 
             Debug --> verbose --> default output --> suppress.""")
@@ -62,14 +69,14 @@ class swITch:
         args = parser.parse_args()
     
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
-            args.port, args.suppress, args.verbose)
+            args.port, args.suppress, args.file, args.verbose)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, verbose):      
+    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose):      
     
-        ### FILE STUFF ###
+        ### FILE DESCRIPTOR STUFF ###
     
         # Attempt to get file descriptors for each provided txt file
         output_file = self.open_file('output.log', 'w')
@@ -139,9 +146,10 @@ class swITch:
                 ip = self.strip_new_line(raw_ip)
                 list_of_IPs.append(ip)
         
-        ### SWITCH CONNECTION AND EXECUTION LOGIC ###  
-    
+        # All Device IPs
         for ip in list_of_IPs:
+            
+           ### SWITCH CONNECTION LOGIC ###    
             # If Cisco...
             if ip.find('cisco_ios') is not -1:
                 ip = ip.rstrip(',cisco_ios')
@@ -175,28 +183,56 @@ class swITch:
                 if enable:
                     self.enable(dev, uname)
             
+            ### COMMAND EXECUTION LOGIC ###
             # Run all commands on this device
-            for cmd in list_of_commands:
-                if verbose or debug:
-                    output = dev.find_prompt() + cmd
-                    print output
-                    self.write_to(output_file, output + "\n")
-                    
-                output = dev.send_command(cmd) # send command
-                if not suppress:
-                    print output # default output, can be suppressed
-                    self.write_to(output_file, output)
-                    
-                if debug:
-                    output = "PROMPT:" + dev.find_prompt() 
-                    print output
-                    self.write_to(output_file, output + "\n")
+            if commands is not None:
+                for cmd in list_of_commands:
+                    if verbose or debug:
+                        output = dev.find_prompt() + cmd
+                        print output
+                        self.write_to(output_file, output + "\n")
 
-            dev.disconnect()
-            if not suppress:
-                output = "SSH connection closed to " + ip # base output, can be suppressed
-                print output
-                self.write_to(output_file, output + "\n")
+                    output = dev.send_command(cmd) # send command
+                    if not suppress:
+                        print output # default output, can be suppressed
+                        self.write_to(output_file, output)
+
+                    if debug:
+                        output = "PROMPT:" + dev.find_prompt() 
+                        print output
+                        self.write_to(output_file, output + "\n")
+
+                dev.disconnect()
+                if not suppress:
+                    output = "SSH connection closed to " + ip # base output, can be suppressed
+                    print output
+                    self.write_to(output_file, output + "\n")
+                    
+            
+            ### IMAGE FILE TRANSFER LOGIC ###
+            if file_image is not None:
+                with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
+                    print file_image
+                    if not scp_transfer.check_file_exists():
+                        if not scp_transfer.verify_space_available():
+                            raise ValueError("Insufficient space available on remote device")
+
+                        print "Enabling SCP"
+                        output = self.scp_handler(dev, mode='enable')
+                        print output
+
+                        print "\nTransferring file"
+                        scp_transfer.transfer_file()
+
+                        print "\nDisabling SCP"
+                        output = scp_handler(dev, mode='disable')
+                        print output
+
+                        print "\nVerifying file"
+                        if scp_transfer.verify_file():
+                            print "Source and Destimation MD5 matches"
+                        else:
+                            raise ValueError("MD5 mismatch between src and dest")
  
         ### CLEANUP ###
         
@@ -279,7 +315,12 @@ class swITch:
             dev.enable()
         else: # username and password
             dev.enable(default_username=enable_username) 
-
+    
+    def scp_handler(self, dev, cmd='ip scp server enable', mode='enable'):
+        if mode == 'disable':
+            cmd = 'no ' + cmd
+        return dev.send_config_set([cmd])
+    
     
 if __name__=='__main__':
     swITch()
