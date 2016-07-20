@@ -6,7 +6,7 @@
 # Send a config to a list of switches, specified in config files. Uses netmiko
 # for handling switch interaction.
 
-
+import datetime
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 from netmiko import ConnectHandler, FileTransfer
@@ -212,27 +212,39 @@ class swITch:
             ### IMAGE FILE TRANSFER LOGIC ###
             if file_image is not None:
                 with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
-                    print file_image
-                    if not scp_transfer.check_file_exists():
+                    #print file_image
+                    if scp_transfer.check_file_exists():
+                        if not suppress:
+                            print "###### " + file_image + " ######" + " ALREADY EXISTS"
+                    else:
                         if not scp_transfer.verify_space_available():
                             raise ValueError("Insufficient space available on remote device")
 
-                        print "Enabling SCP"
+                        if verbose or debug:
+                            print "Enabling SCP"
                         output = self.scp_handler(dev, mode='enable')
-                        print output
+                        if verbose or debug:
+                            print "SCP enabled"
 
-                        print "\nTransferring file"
+                        if not suppress:
+                            print "\nStarted Transferring at " + str(datetime.datetime.now())
                         scp_transfer.transfer_file()
+                        if not suppress:
+                            print "\nFinished transferring at " + str(datetime.datetime.now())
 
-                        print "\nDisabling SCP"
-                        output = scp_handler(dev, mode='disable')
-                        print output
+                        if verbose or debug:
+                            print "\nDisabling SCP"
+                        output = self.scp_handler(dev, mode='disable')
+                        if verbose or debug:
+                            print "\nSCP disabled"
 
-                        print "\nVerifying file"
+                        if not suppress:
+                            print "\nVerifying file"
                         if scp_transfer.verify_file():
                             print "Source and Destimation MD5 matches"
                         else:
                             raise ValueError("MD5 mismatch between src and dest")
+                        
  
         ### CLEANUP ###
         
@@ -319,6 +331,8 @@ class swITch:
     def scp_handler(self, dev, cmd='ip scp server enable', mode='enable'):
         if mode == 'disable':
             cmd = 'no ' + cmd
+            dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
+        dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
         return dev.send_config_set([cmd])
     
     
