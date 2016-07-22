@@ -212,38 +212,59 @@ class swITch:
             ### IMAGE FILE TRANSFER LOGIC ###
             if file_image is not None:
                 with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
-                    #print file_image
                     if scp_transfer.check_file_exists():
                         if not suppress:
-                            print "###### " + file_image + " ######" + " ALREADY EXISTS"
+                            output = file_image + " Already Exists"
+                            print output
+                        self.write_to(output_file, output + "\n")
                     else:
                         if not scp_transfer.verify_space_available():
-                            raise ValueError("Insufficient space available on remote device")
+                            output = "Insufficient space available on remote device"
+                            raise ValueError(output)
+                            self.write_to(output_file, output + "\n")
 
                         if verbose or debug:
                             print "Enabling SCP"
                         output = self.scp_handler(dev, mode='enable')
+                        if debug:
+                            print output
                         if verbose or debug:
                             print "SCP enabled"
 
                         if not suppress:
-                            print "\nStarted Transferring at " + str(datetime.datetime.now())
+                            output = "Started Transferring at " + str(datetime.datetime.now())
+                            print output
+                        self.write_to(output_file, output + "\n")
+                        
                         scp_transfer.transfer_file()
+                        
                         if not suppress:
-                            print "\nFinished transferring at " + str(datetime.datetime.now())
+                            output = "Finished transferring at " + str(datetime.datetime.now())
+                            print output
+                        self.write_to(output_file, output + "\n")
 
                         if verbose or debug:
-                            print "\nDisabling SCP"
+                            print "Disabling SCP"
                         output = self.scp_handler(dev, mode='disable')
+                        if debug:
+                            print output
                         if verbose or debug:
-                            print "\nSCP disabled"
+                            print "SCP disabled"
 
                         if not suppress:
-                            print "\nVerifying file"
+                            output = "Verifying file"
+                            print output
+                        self.write_to(output_file, output + "\n")
+                        
                         if scp_transfer.verify_file():
-                            print "Source and Destimation MD5 matches"
+                            output = "Source and Destination MD5 matches"
+                            print output
+                            self.write_to(output_file, output + "\n")
                         else:
-                            raise ValueError("MD5 mismatch between src and dest")
+                            output = "MD5 mismatch between src and dest"
+                            raise ValueError(output)
+                            self.write_to(output_file, output + "\n")
+                            
                         
  
         ### CLEANUP ###
