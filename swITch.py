@@ -353,6 +353,7 @@ class swITch:
         if mode == 'disable':
             cmd = 'no ' + cmd
             dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
+            return dev.send_config_set([cmd])
         dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
         return dev.send_config_set([cmd])
     
