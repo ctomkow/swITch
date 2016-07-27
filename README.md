@@ -5,6 +5,9 @@
 A python program which allows you to push commands to network devices.  It
 can then dump the output to a file for later analysis.
 
+New: Implements netmiko's SCP file transfer! Use -f to transfer files to the device (specifies flash: directory only)
+Note: The SCP method enables TACACS+ authorization then removes it after the SCP transfer happens (SCP needs authentication and authorization). This is specific to my environment :O
+
 I have decided to re-factor this code to work with Netmiko (work by Kirk Byers).
 Better to solve new problems instead of re-inventing the wheel.
 
@@ -91,6 +94,9 @@ Other examples.
 
 
 `$python ./swITch.py -i '192.168.0.4,cisco_ios' -c 'show vlan' -a auth.txt`
+
+
+`$python ./swITch.py -e -i 172.30.30.30 -f c3560-ios-image.bin -a auth.txt`
 
 
 `$python ./swITch.py -e -i ip.list -c cli.config -a auth.txt`
