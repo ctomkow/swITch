@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 # Craig Tomkow
-# April 4, 2016
+# July 27, 2016
 #
 # Send a config to a list of switches, specified in config files. Uses netmiko
 # for handling switch interaction.
 
 import datetime
+import logger
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 from netmiko import ConnectHandler, FileTransfer
@@ -54,19 +55,20 @@ class swITch:
         outputFlags.add_argument('-d', '--debug', required=False, action='store_true',
             help="""Prints out additional session action information beyond 
             the default output and the verbose flag. Debug is a superset of all
-            the flags. Debug --> verbose --> default output --> suppress.""")
+            the flags. Debug --> verbose --> default/info --> suppress.""")
         outputFlags.add_argument('-h', '--help', action='help', 
             help="""show this help message and exit""")
         outputFlags.add_argument('-s', '--suppress', action='store_true', required=False,
-            help="""Suppress all output.  What is happening?! OOOoooOOoOOOO! Suppress 
-            is a subset of the default output. Debug --> verbose --> 
-            default output --> suppress.""")
+            help="""Suppress all STDOUT, also no log file entries.  What is happening?! Suppress 
+            is a subset of the default/info output. Debug --> verbose --> 
+            default/info --> suppress.""")
         outputFlags.add_argument('-v', '--verbose', action='store_true', required=False,
             help="""Prints out additional cli information.  This prints out the 
             cli prompt and command sent. Verbose is a subset of debug. 
-            Debug --> verbose --> default output --> suppress.""")
+            Debug --> verbose --> default/info --> suppress.""")
         
         args = parser.parse_args()
+        
     
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
             args.port, args.suppress, args.file, args.verbose)
@@ -76,39 +78,39 @@ class swITch:
     #--------------------------------------------------------------------------#
     def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose):      
     
-        ### FILE DESCRIPTOR STUFF ###
+        ### LOGGING STUFF ###
+        if debug:
+            log = logger.logger("debug")
+        elif verbose:
+            log = logger.logger("verbose")
+        elif suppress:
+            log = logger.logger("suppress")
+        else: # Default output, no flags needed for this
+            log = logger.logger("info")
     
+        ### FILE DESCRIPTOR STUFF ###
         # Attempt to get file descriptors for each provided txt file
-        output_file = self.open_file('output.log', 'w')
-        
         if ip_list is not None:
             ip_list_file = self.open_file(ip_list, 'r')
             if ip_list_file == -1:
-                if debug:
-                    print 'Not a file.  Assuming it\'s an IP address'
-                    self.write_to(output_file, 'Not a file.  Assuming it\'s an IP address' + "\n")
+                log.event('debug', 'DEBUG: Not a file.  Assuming ' + ip_list + ' is a valid IP')
                 ip_list_file = [ip_list] 
         if commands is not None:
             cli_file = self.open_file(commands, 'r')
             if cli_file == -1:
-                if debug:
-                    print 'Not a file. Assuming it\'s a cli command'
-                    self.write_to(output_file, 'Not a file. Assuming it\'s a cli command' + "\n")
+                log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd')
                 cli_file = [commands]
         if port_list is not None:
             port_list_file = self.open_file(port_list, 'r')
             if port_list_file == -1:
-                if debug:
-                    print 'Can\'t open port list file'
-                    self.write_to(output_file, 'Can\'t open port list file.' + "\n")
-                pass
+                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list)
+                raise IOError('Can\'t open port list file')
         if auth is not None:
             access_file = self.open_file(auth, 'r') 
             if access_file == -1:
-                if debug:
-                    print 'Can\'t open authentication file'
-                    self.write_to(output_file, 'Can\'t open port list file.' + "\n")
-                pass
+                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth)
+                raise IOError('Can\'t open authentication file')
+                
             
         raw_uname = access_file.readline()
         uname = self.strip_new_line(raw_uname)      
@@ -159,11 +161,9 @@ class swITch:
                     'username':uname,
                     'password':passwd,
                     'secret':enable_passwd,
-                    'verbose': not suppress}
+                    'verbose': False}
                 dev = ConnectHandler(**cisco_details)
-                if not suppress:
-                    output = "SSH connection open to " + ip
-                    self.write_to(output_file, output + "\n")
+                log.event('info', "SSH connection open to " + ip)
                 if enable:
                     self.enable(dev)
             # If HP...
@@ -175,138 +175,80 @@ class swITch:
                     'username':uname,
                     'password':passwd,
                     'secret':passwd,
-                    'verbose': not suppress}
+                    'verbose': False}
                 dev = ConnectHandler(**hp_details)
-                if not suppress:
-                    output = "SSH connection open to " + ip
-                    self.write_to(output_file, output + "\n")
+                log.event('info', "SSH connection open to " + ip)
                 if enable:
                     self.enable(dev, uname)
+            else: # Unsupported device or missing device type, so skip it
+                log.event('info', "Device " + ip + " is an unsupported type, or missing type name. Skipping.")
+                continue
             
             ### COMMAND EXECUTION LOGIC ###
             # Run all commands on this device
             if commands is not None:
                 for cmd in list_of_commands:
-                    if verbose or debug:
-                        output = dev.find_prompt() + cmd
-                        print output
-                        self.write_to(output_file, output + "\n")
-
-                    output = dev.send_command(cmd) # send command
-                    if not suppress:
-                        print output # default output, can be suppressed
-                        self.write_to(output_file, output)
-
-                    if debug:
-                        output = "PROMPT:" + dev.find_prompt() 
-                        print output
-                        self.write_to(output_file, output + "\n")
+                    log.event('verbose', dev.find_prompt() + cmd)
+                    log_output = dev.send_command(cmd) # send command
+                    log.event('info', log_output)
+                    log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
 
                 dev.disconnect()
-                if not suppress:
-                    output = "SSH connection closed to " + ip # base output, can be suppressed
-                    print output
-                    self.write_to(output_file, output + "\n")
+                log.event('info', "SSH connection closed to " + ip)
                     
             
             ### IMAGE FILE TRANSFER LOGIC ###
             if file_image is not None:
                 with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
                     if scp_transfer.check_file_exists():
-                        if not suppress:
-                            output = file_image + " Already Exists"
-                            print output
-                        self.write_to(output_file, output + "\n")
+                        log.event('info', file_image + " Already Exists")
                     else:
                         if not scp_transfer.verify_space_available():
                             output = "Insufficient space available on remote device"
                             raise ValueError(output)
-                            self.write_to(output_file, output + "\n")
+                            log.event('info', output)
 
-                        if verbose or debug:
-                            print "Enabling SCP"
-                        output = self.scp_handler(dev, mode='enable')
-                        if debug:
-                            print output
-                        if verbose or debug:
-                            print "SCP enabled"
-
-                        if not suppress:
-                            output = "Started Transferring at " + str(datetime.datetime.now())
-                            print output
-                        self.write_to(output_file, output + "\n")
-                        
-                        scp_transfer.transfer_file()
-                        
-                        if not suppress:
-                            output = "Finished transferring at " + str(datetime.datetime.now())
-                            print output
-                        self.write_to(output_file, output + "\n")
-
-                        if verbose or debug:
-                            print "Disabling SCP"
-                        output = self.scp_handler(dev, mode='disable')
-                        if debug:
-                            print output
-                        if verbose or debug:
-                            print "SCP disabled"
-
-                        if not suppress:
-                            output = "Verifying file"
-                            print output
-                        self.write_to(output_file, output + "\n")
+                        log.event('verbose', 'Enabling SCP') 
+                        log_output = self.scp_handler(dev, mode='enable') # Enable SCP  
+                        log.event('debug', 'DEBUG: ' + log_output)
+                        log.event('verbose', 'SCP enabled')
+                        log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
+                        scp_transfer.transfer_file # Transfer file                   
+                        log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
+                        log.event('verbose', 'Disabling SCP')
+                        log_output = self.scp_handler(dev, mode='disable') # Disable SCP
+                        log.event('debug', 'DEBUG: ' + log_output)
+                        log.event('verbose', 'SCP disabled')
+                        log.event('info', 'Verifying file...')
                         
                         if scp_transfer.verify_file():
-                            output = "Source and Destination MD5 matches"
-                            print output
-                            self.write_to(output_file, output + "\n")
+                            log.event('info', 'Src and dest MD5 matches')
                         else:
-                            output = "MD5 mismatch between src and dest"
+                            output
                             raise ValueError(output)
-                            self.write_to(output_file, output + "\n")
-                            
-                        
+                            log.event('info', 'MD5 mismatch between src and dest')                 
  
-        ### CLEANUP ###
-        
+        ### CLEANUP ###     
         # Close all files if they are open
         if commands is not None:
             op_code = self.close_file(cli_file)
             if op_code == -1:
-                if debug:
-                    print 'Can\'t close cli file'
-                    self.write_to(output_file, 'Can\'t close cli file' + "\n")
-                pass
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(cli_file))
         if port_list is not None:
             op_code = self.close_file(port_list_file)
             if op_code == -1:
-                if debug:
-                    print 'Can\'t close port list file'
-                    self.write_to(output_file, 'Can\'t close port list file' + "\n")
-                pass
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(port_list_file))
         if ip_list_file is not None:
             op_code = self.close_file(ip_list_file)
             if op_code == -1:
-                if debug:
-                    print 'Can\'t close ip list file'
-                    self.write_to(output_file, 'Can\'t close ip list file' + "\n")
-                pass
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(ip_list_file))
         if access_file is not None:
             op_code = self.close_file(access_file)
             if op_code == -1:
-                if debug:
-                    print 'Can\'t close access file'
-                    self.write_to(output_file, 'Can\'t close access file' + "\n")
-                pass
+                log.event('debug', 'DEBUG: File that can\'t be closed: '+ str(access_file))
             
         # Last thing, close the output file
-        if output_file is not None:
-            op_code = self.close_file(output_file)
-            if op_code == -1:
-                if debug:
-                    print 'Can\'t close output.log file'
-                    self.write_to(output_file, 'Can\'t close output.log file' + "\n")
-                pass
+        log.close_log_file()
             
 #------------------------------------------------------------------------------#
 #                                  Methods                                     #
