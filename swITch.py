@@ -90,22 +90,22 @@ class swITch:
     
         ### FILE DESCRIPTOR STUFF ###
         # Attempt to get file descriptors for each provided txt file
-        if ip_list is not None:
+        if ip_list:
             ip_list_file = self.open_file(ip_list, 'r')
             if ip_list_file == -1:
                 log.event('debug', 'DEBUG: Not a file.  Assuming ' + ip_list + ' is a valid IP')
                 ip_list_file = [ip_list] 
-        if commands is not None:
+        if commands:
             cli_file = self.open_file(commands, 'r')
             if cli_file == -1:
                 log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd')
                 cli_file = [commands]
-        if port_list is not None:
+        if port_list:
             port_list_file = self.open_file(port_list, 'r')
             if port_list_file == -1:
                 log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list)
                 raise IOError('Can\'t open port list file')
-        if auth is not None:
+        if auth:
             access_file = self.open_file(auth, 'r') 
             if access_file == -1:
                 log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth)
@@ -124,7 +124,7 @@ class swITch:
         list_of_IPs      = []
 
         # Parse port description file
-        if port_list is not None: 
+        if port_list: 
             for raw_cmd in port_list_file:
                 cmd = self.strip_new_line(raw_cmd)
                 if cmd.find(',') == -1:
@@ -138,12 +138,12 @@ class swITch:
                     list_of_commands.append(interface_cmd)
                     list_of_commands.append(description_cmd)
         # Parse cli commands
-        if commands is not None:    
+        if commands:    
             for raw_cmd in cli_file:
                 cmd = self.strip_new_line(raw_cmd)
                 list_of_commands.append(cmd) 
         # Parse IPs from file
-        if ip_list is not None:
+        if ip_list:
             for raw_ip in ip_list_file:
                 ip = self.strip_new_line(raw_ip)
                 list_of_IPs.append(ip)
@@ -186,7 +186,7 @@ class swITch:
             
             ### COMMAND EXECUTION LOGIC ###
             # Run all commands on this device
-            if commands is not None:
+            if commands:
                 for cmd in list_of_commands:
                     log.event('verbose', dev.find_prompt() + cmd)
                     log_output = dev.send_command(cmd) # send command
@@ -198,7 +198,7 @@ class swITch:
                     
             
             ### IMAGE FILE TRANSFER LOGIC ###
-            if file_image is not None:
+            if file_image:
                 with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
                     if scp_transfer.check_file_exists():
                         log.event('info', file_image + " Already Exists")
@@ -230,19 +230,19 @@ class swITch:
  
         ### CLEANUP ###     
         # Close all files if they are open
-        if commands is not None:
+        if commands:
             op_code = self.close_file(cli_file)
             if op_code == -1:
                 log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(cli_file))
-        if port_list is not None:
+        if port_list:
             op_code = self.close_file(port_list_file)
             if op_code == -1:
                 log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(port_list_file))
-        if ip_list_file is not None:
+        if ip_list_file:
             op_code = self.close_file(ip_list_file)
             if op_code == -1:
                 log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(ip_list_file))
-        if access_file is not None:
+        if access_file:
             op_code = self.close_file(access_file)
             if op_code == -1:
                 log.event('debug', 'DEBUG: File that can\'t be closed: '+ str(access_file))
