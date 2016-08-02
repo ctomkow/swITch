@@ -8,7 +8,6 @@
 
 import datetime
 import logger
-import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 from netmiko import ConnectHandler, FileTransfer
@@ -67,7 +66,6 @@ class swITch:
             help="""Prints out additional cli information.  This prints out the 
             cli prompt and command sent. Verbose is a subset of debug. 
             Debug --> verbose --> default/info --> suppress.""")
-        outputFlags.add_argument('-z', '--zomg', action='store_true', required=False, help=argparse.SUPPRESS)
         
         args = parser.parse_args()
         
@@ -78,7 +76,7 @@ class swITch:
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose, zomg):      
+    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose):      
     
         ### LOGGING STUFF ###
         if debug:
@@ -211,14 +209,14 @@ class swITch:
                             log.event('info', output)
 
                         log.event('verbose', 'Enabling SCP') 
-                        log_output = self.scp_handler(dev, zomg, mode='enable') # Enable SCP  
+                        log_output = self.scp_handler(dev, mode='enable') # Enable SCP  
                         log.event('debug', 'DEBUG: ' + log_output)
                         log.event('verbose', 'SCP enabled')
                         log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
                         scp_transfer.transfer_file # Transfer file                   
                         log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
                         log.event('verbose', 'Disabling SCP')
-                        log_output = self.scp_handler(dev, zomg, mode='disable') # Disable SCP
+                        log_output = self.scp_handler(dev, mode='disable') # Disable SCP
                         log.event('debug', 'DEBUG: ' + log_output)
                         log.event('verbose', 'SCP disabled')
                         log.event('info', 'Verifying file...')
@@ -293,16 +291,12 @@ class swITch:
         else: # username and password
             dev.enable(default_username=enable_username) 
     
-    def scp_handler(self, dev, zomg, cmd='ip scp server enable', mode='enable'):
+    def scp_handler(self, dev, cmd='ip scp server enable', mode='enable'):
         if mode == 'disable':
             cmd = 'no ' + cmd
-            if zomg:
-                #print 'kill teh zomg'
-                dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
+            dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
             return dev.send_config_set([cmd])
-        if zomg:
-            #print 'teh zomg'
-            dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
+        dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
         return dev.send_config_set([cmd])
     
     
