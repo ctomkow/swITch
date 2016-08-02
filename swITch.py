@@ -8,7 +8,6 @@
 
 import datetime
 import logger
-import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 from netmiko import ConnectHandler, FileTransfer
@@ -28,10 +27,10 @@ class swITch:
             swITch.py -eva auth.txt -i 172.30.30.30,cisco_ios -c 'show vlan'""")
             
         reqFlags = parser.add_argument_group('Required flags')
-        reqFlags.add_argument('-a', '--auth', metavar='\b', required=True,
+        reqFlags.add_argument('-a', '--auth', required=True,
             help="""Txt file with username on first line, passwd on second,
             enablePasswd on third.""")
-        reqFlags.add_argument('-i', '--ip', metavar='\b', required=True, 
+        reqFlags.add_argument('-i', '--ip', required=True, 
             help="""Txt file with one IP per line. Or a single IP in single 
             quotes.""")
       
@@ -41,15 +40,15 @@ class swITch:
             you into privileged mode on login.""")
            
         mutExclusiveFlags = parser.add_mutually_exclusive_group()
-        mutExclusiveFlags.add_argument('-c', '--cmd', metavar='\b', required=False,
+        mutExclusiveFlags.add_argument('-c', '--cmd', required=False,
             help="""Txt file with one device command per line. Or a single 
             command in single quotes.""")
-        mutExclusiveFlags.add_argument('-f', '--file', metavar='\b', required=False,
+        mutExclusiveFlags.add_argument('-f', '--file', required=False,
             help="""File name that will be transfered to device. Usually an image
             upgrade file.""")
-        mutExclusiveFlags.add_argument('-p', '--portDesc', metavar='\b', required=False, 
+        mutExclusiveFlags.add_argument('-p', '--port', required=False, 
             help="""File that has interface and port descriptions seperated 
-            by a comma per line. "int gi1/0/1,des C001".  Tip, use an excel 
+            by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
             sheet to generate the list.""")
             
         outputFlags = parser.add_argument_group('Output flags')
@@ -67,18 +66,17 @@ class swITch:
             help="""Prints out additional cli information.  This prints out the 
             cli prompt and command sent. Verbose is a subset of debug. 
             Debug --> verbose --> default/info --> suppress.""")
-        outputFlags.add_argument('-z', '--zomg', action='store_true', required=False, help=argparse.SUPPRESS)
         
         args = parser.parse_args()
         
     
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
-            args.portDesc, args.suppress, args.file, args.verbose, args.zomg)
+            args.port, args.suppress, args.file, args.verbose)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose, zomg):      
+    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose):      
     
         ### LOGGING STUFF ###
         if debug:
@@ -211,14 +209,14 @@ class swITch:
                             log.event('info', output)
 
                         log.event('verbose', 'Enabling SCP') 
-                        log_output = self.scp_handler(dev, zomg, mode='enable') # Enable SCP  
+                        log_output = self.scp_handler(dev, mode='enable') # Enable SCP  
                         log.event('debug', 'DEBUG: ' + log_output)
                         log.event('verbose', 'SCP enabled')
                         log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
                         scp_transfer.transfer_file # Transfer file                   
                         log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
                         log.event('verbose', 'Disabling SCP')
-                        log_output = self.scp_handler(dev, zomg, mode='disable') # Disable SCP
+                        log_output = self.scp_handler(dev, mode='disable') # Disable SCP
                         log.event('debug', 'DEBUG: ' + log_output)
                         log.event('verbose', 'SCP disabled')
                         log.event('info', 'Verifying file...')
@@ -293,16 +291,12 @@ class swITch:
         else: # username and password
             dev.enable(default_username=enable_username) 
     
-    def scp_handler(self, dev, zomg, cmd='ip scp server enable', mode='enable'):
+    def scp_handler(self, dev, cmd='ip scp server enable', mode='enable'):
         if mode == 'disable':
             cmd = 'no ' + cmd
-            if zomg:
-                #print 'kill teh zomg'
-                dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
+            dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
             return dev.send_config_set([cmd])
-        if zomg:
-            #print 'teh zomg'
-            dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
+        dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
         return dev.send_config_set([cmd])
     
     
