@@ -27,10 +27,10 @@ class swITch:
             swITch.py -eva auth.txt -i 172.30.30.30,cisco_ios -c 'show vlan'""")
             
         reqFlags = parser.add_argument_group('Required flags')
-        reqFlags.add_argument('-a', '--auth', required=True,
+        reqFlags.add_argument('-a', '--auth', required=True, metavar='\b',
             help="""Txt file with username on first line, passwd on second,
             enablePasswd on third.""")
-        reqFlags.add_argument('-i', '--ip', required=True, 
+        reqFlags.add_argument('-i', '--ip', required=True, metavar='\b',
             help="""Txt file with one IP per line. Or a single IP in single 
             quotes.""")
       
@@ -40,13 +40,13 @@ class swITch:
             you into privileged mode on login.""")
            
         mutExclusiveFlags = parser.add_mutually_exclusive_group()
-        mutExclusiveFlags.add_argument('-c', '--cmd', required=False,
+        mutExclusiveFlags.add_argument('-c', '--cmd', required=False, metavar='\b',
             help="""Txt file with one device command per line. Or a single 
             command in single quotes.""")
-        mutExclusiveFlags.add_argument('-f', '--file', required=False,
+        mutExclusiveFlags.add_argument('-f', '--file', required=False, metavar='\b',
             help="""File name that will be transfered to device. Usually an image
             upgrade file.""")
-        mutExclusiveFlags.add_argument('-p', '--port', required=False, 
+        mutExclusiveFlags.add_argument('-p', '--port', required=False, metavar='\b', 
             help="""File that has interface and port descriptions seperated 
             by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
             sheet to generate the list.""")
