@@ -8,6 +8,7 @@
 
 import datetime
 import logger
+import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 from netmiko import ConnectHandler, FileTransfer
@@ -66,17 +67,19 @@ class swITch:
             help="""Prints out additional cli information.  This prints out the 
             cli prompt and command sent. Verbose is a subset of debug. 
             Debug --> verbose --> default/info --> suppress.""")
+        outputFlags.add_argument('-z', '--zomg', action='store_true', required=False,
+            help=argparse.SUPPRESS)
         
         args = parser.parse_args()
         
     
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
-            args.port, args.suppress, args.file, args.verbose)
+            args.port, args.suppress, args.file, args.verbose, args.zomg)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose):      
+    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose, zomg):      
     
         ### LOGGING STUFF ###
         if debug:
@@ -202,22 +205,26 @@ class swITch:
                 with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
                     if scp_transfer.check_file_exists():
                         log.event('info', file_image + " Already Exists")
-                    else:
+                    else: ##### make this an elif so the program doesn't break when not enough space available...remove the valueerror...
                         if not scp_transfer.verify_space_available():
                             output = "Insufficient space available on remote device"
-                            raise ValueError(output)
                             log.event('info', output)
+                            #raise ValueError(output)
 
                         log.event('verbose', 'Enabling SCP') 
-                        log_output = self.scp_handler(dev, mode='enable') # Enable SCP  
+                        log_output = self.scp_handler(dev, 'enable') # Enable SCP  
                         log.event('debug', 'DEBUG: ' + log_output)
+                        if zomg:
+                            log.event('debug', 'DEBUG: ' + self.enable_authorization(dev))
                         log.event('verbose', 'SCP enabled')
                         log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
-                        scp_transfer.transfer_file # Transfer file                   
+                        scp_transfer.transfer_file() # Transfer file                   
                         log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
                         log.event('verbose', 'Disabling SCP')
-                        log_output = self.scp_handler(dev, mode='disable') # Disable SCP
+                        log_output = self.scp_handler(dev, 'disable') # Disable SCP
                         log.event('debug', 'DEBUG: ' + log_output)
+                        if zomg:
+                            log.event('debug', 'DEBUG: ' + self.disable_authorization(dev))
                         log.event('verbose', 'SCP disabled')
                         log.event('info', 'Verifying file...')
                         
@@ -225,8 +232,9 @@ class swITch:
                             log.event('info', 'Src and dest MD5 matches')
                         else:
                             output
-                            raise ValueError(output)
-                            log.event('info', 'MD5 mismatch between src and dest')                 
+                            log.event('info', 'MD5 mismatch between src and dest') 
+                            #raise ValueError(output)
+                                            
  
         ### CLEANUP ###     
         # Close all files if they are open
@@ -291,13 +299,18 @@ class swITch:
         else: # username and password
             dev.enable(default_username=enable_username) 
     
-    def scp_handler(self, dev, cmd='ip scp server enable', mode='enable'):
+    def scp_handler(self, dev, mode):
+        cmd='ip scp server enable'
         if mode == 'disable':
             cmd = 'no ' + cmd
-            dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
             return dev.send_config_set([cmd])
-        dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
         return dev.send_config_set([cmd])
+    
+    def enable_authorization(self, dev):
+        return dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
+        
+    def disable_authorization(self, dev):
+        return dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
     
     
 if __name__=='__main__':
