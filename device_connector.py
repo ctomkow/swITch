@@ -5,6 +5,7 @@
 
 
 from netmiko import ConnectHandler
+from netmiko import FileTransfer
 
 
 class device_connector:
@@ -82,14 +83,62 @@ class device_connector:
         if self.device_type == 'cisco_ios':
             self.device_connection.enable()
         elif self.device_type == 'hp_procurve':
-            print self.username
-            uname = self.username
-            self.device_connection.enable(default_username=uname)
-
-#        if self.enable_username is '': # just a password
-#            dev.enable()
-#        else: # username and password
-#            dev.enable(default_username=enable_username) 
+            self.device_connection.enable(default_username=self.username)
+    
+    def transfer_file(self, file, zomg):
+        with FileTransfer(self.device_connection, source_file=file, dest_file=file) as scp_transfer:
+            if scp_transfer.check_file_exists():
+                print 'file already exists'
+                #log.event('info', file_image + " Already Exists")
+            else: ##### make this an elif so the program doesn't break when not enough space available...remove the valueerror...
+                if not scp_transfer.verify_space_available():
+                    output = "Insufficient space available on remote device"
+                    print output
+                    #log.event('info', output)
+                    #raise ValueError(output) 
+                
+#                log.event('verbose', 'Enabling SCP') 
+                log_output = self.scp_handler('enable') # Enable SCP  
+#                log.event('debug', 'DEBUG: ' + log_output)
+                if zomg:
+#                   log.event('debug', 'DEBUG: ' + self.enable_authorization(dev))
+                    self.enable_authorization()
+#                log.event('verbose', 'SCP enabled')
+#                log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
+                scp_transfer.transfer_file() # Transfer file                   
+#                log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
+#                log.event('verbose', 'Disabling SCP')
+                log_output = self.scp_handler('disable') # Disable SCP
+#                log.event('debug', 'DEBUG: ' + log_output)
+                if zomg:
+#                        log.event('debug', 'DEBUG: ' + self.disable_authorization(dev))
+                    self.disable_authorization()
+#                log.event('verbose', 'SCP disabled')
+#                log.event('info', 'Verifying file...')
+#                        
+                if scp_transfer.verify_file():
+#                        log.event('info', 'Src and dest MD5 matches')
+                    print 'src and des MD5 matches'
+                else:
+                    print 'MD5 mismatch'
+#                      output
+#                      log.event('info', 'MD5 mismatch between src and dest') 
+#                      raise ValueError(output)
+    
+    def scp_handler(self, mode):
+        cmd='ip scp server enable'
+        if mode == 'disable':
+            cmd = 'no ' + cmd
+            return self.device_connection.send_config_set([cmd])
+        if mode == 'enable':
+            return self.device_connection.send_config_set([cmd])
+    
+    def enable_authorization(self):
+        return self.device_connection.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
+        
+    def disable_authorization(self):
+        return self.device_connection.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
+        
             
             
 ### CREATE VARIOUS METHODS FOR INTERACTING WITH NETMIKO HERE SO I AM NOT DIRECTLY

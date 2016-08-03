@@ -162,11 +162,6 @@ class swITch:
             log.event('info', "SSH connection open to " + dev.ip)
             if enable:
                 dev.enable()
-######            if enable:
-######                self.enable(dev, uname)
-######            else: # Unsupported device or missing device type, so skip it
-######                log.event('info', "Device " + ip + " is an unsupported type, or missing type name. Skipping.")
-######                continue
             
             ### COMMAND EXECUTION LOGIC ###
             # Run all commands on this device
@@ -183,38 +178,39 @@ class swITch:
             
             ### IMAGE FILE TRANSFER LOGIC ###
             if file_image:
-                with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
-                    if scp_transfer.check_file_exists():
-                        log.event('info', file_image + " Already Exists")
-                    else: ##### make this an elif so the program doesn't break when not enough space available...remove the valueerror...
-                        if not scp_transfer.verify_space_available():
-                            output = "Insufficient space available on remote device"
-                            log.event('info', output)
-                            #raise ValueError(output)
-
-                        log.event('verbose', 'Enabling SCP') 
-                        log_output = self.scp_handler(dev, 'enable') # Enable SCP  
-                        log.event('debug', 'DEBUG: ' + log_output)
-                        if zomg:
-                            log.event('debug', 'DEBUG: ' + self.enable_authorization(dev))
-                        log.event('verbose', 'SCP enabled')
-                        log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
-                        scp_transfer.transfer_file() # Transfer file                   
-                        log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
-                        log.event('verbose', 'Disabling SCP')
-                        log_output = self.scp_handler(dev, 'disable') # Disable SCP
-                        log.event('debug', 'DEBUG: ' + log_output)
-                        if zomg:
-                            log.event('debug', 'DEBUG: ' + self.disable_authorization(dev))
-                        log.event('verbose', 'SCP disabled')
-                        log.event('info', 'Verifying file...')
-                        
-                        if scp_transfer.verify_file():
-                            log.event('info', 'Src and dest MD5 matches')
-                        else:
-                            output
-                            log.event('info', 'MD5 mismatch between src and dest') 
-                            #raise ValueError(output)
+                dev.transfer_file(file_image, zomg)
+#                with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
+#                    if scp_transfer.check_file_exists():
+#                        log.event('info', file_image + " Already Exists")
+#                    else: ##### make this an elif so the program doesn't break when not enough space available...remove the valueerror...
+#                        if not scp_transfer.verify_space_available():
+#                            output = "Insufficient space available on remote device"
+#                            log.event('info', output)
+#                            #raise ValueError(output)
+#
+#                        log.event('verbose', 'Enabling SCP') 
+#                        log_output = self.scp_handler(dev, 'enable') # Enable SCP  
+#                        log.event('debug', 'DEBUG: ' + log_output)
+#                        if zomg:
+#                            log.event('debug', 'DEBUG: ' + self.enable_authorization(dev))
+#                        log.event('verbose', 'SCP enabled')
+#                        log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
+#                        scp_transfer.transfer_file() # Transfer file                   
+#                        log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
+#                        log.event('verbose', 'Disabling SCP')
+#                        log_output = self.scp_handler(dev, 'disable') # Disable SCP
+#                        log.event('debug', 'DEBUG: ' + log_output)
+#                        if zomg:
+#                            log.event('debug', 'DEBUG: ' + self.disable_authorization(dev))
+#                        log.event('verbose', 'SCP disabled')
+#                        log.event('info', 'Verifying file...')
+#                        
+#                        if scp_transfer.verify_file():
+#                            log.event('info', 'Src and dest MD5 matches')
+#                        else:
+#                            output
+#                            log.event('info', 'MD5 mismatch between src and dest') 
+#                            raise ValueError(output)
                                             
  
         ### CLEANUP ###     
@@ -273,18 +269,18 @@ class swITch:
             str = str.rstrip('\n')
         return str
     
-    def scp_handler(self, dev, mode):
-        cmd='ip scp server enable'
-        if mode == 'disable':
-            cmd = 'no ' + cmd
-            return dev.send_config_set([cmd])
-        return dev.send_config_set([cmd])
-    
-    def enable_authorization(self, dev):
-        return dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
-        
-    def disable_authorization(self, dev):
-        return dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
+#    def scp_handler(self, dev, mode):
+#        cmd='ip scp server enable'
+#        if mode == 'disable':
+#            cmd = 'no ' + cmd
+#            return dev.send_config_set([cmd])
+#        return dev.send_config_set([cmd])
+#    
+#    def enable_authorization(self, dev):
+#        return dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
+#        
+#    def disable_authorization(self, dev):
+#        return dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
     
     
 if __name__=='__main__':
