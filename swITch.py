@@ -8,7 +8,7 @@
 
 import datetime
 import logger
-import device
+import device_connector
 import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
