@@ -82,8 +82,9 @@ class device_connector:
         if self.device_type == 'cisco_ios':
             self.device_connection.enable()
         elif self.device_type == 'hp_procurve':
-            print "self.username"
-            self.device_connection.enable(default_username=self.username)
+            print self.username
+            uname = self.username
+            self.device_connection.enable(default_username=uname)
 
 #        if self.enable_username is '': # just a password
 #            dev.enable()
