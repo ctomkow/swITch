@@ -8,10 +8,11 @@
 
 import datetime
 import logger
+import device
 import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-from netmiko import ConnectHandler, FileTransfer
+from netmiko import FileTransfer
 
 
 class swITch:
@@ -154,38 +155,18 @@ class swITch:
         # All Device IPs
         for ip in list_of_IPs:
             
-           ### SWITCH CONNECTION LOGIC ###    
-            # If Cisco...
-            if ip.find('cisco_ios') is not -1:
-                ip = ip.rstrip(',cisco_ios')
-                cisco_details = {
-                    'device_type':'cisco_ios',
-                    'ip':ip,
-                    'username':uname,
-                    'password':passwd,
-                    'secret':enable_passwd,
-                    'verbose': False}
-                dev = ConnectHandler(**cisco_details)
-                log.event('info', "SSH connection open to " + ip)
-                if enable:
-                    self.enable(dev)
-            # If HP...
-            elif ip.find('hp_procurve') is not -1:
-                ip = ip.rstrip(',hp_procurve')
-                hp_details = {
-                    'device_type':'hp_procurve',
-                    'ip':ip,
-                    'username':uname,
-                    'password':passwd,
-                    'secret':passwd,
-                    'verbose': False}
-                dev = ConnectHandler(**hp_details)
-                log.event('info', "SSH connection open to " + ip)
-                if enable:
-                    self.enable(dev, uname)
-            else: # Unsupported device or missing device type, so skip it
-                log.event('info', "Device " + ip + " is an unsupported type, or missing type name. Skipping.")
-                continue
+            ### SWITCH CONNECTION LOGIC ###  
+            # Add error handling around creating a device to handle if a device type is missing, etc.
+            # object = filename.classname
+            dev = device_connector.device_connector(ip, uname, passwd, enable_passwd)
+            log.event('info', "SSH connection open to " + dev.ip)
+            if enable:
+                dev.enable()
+######            if enable:
+######                self.enable(dev, uname)
+######            else: # Unsupported device or missing device type, so skip it
+######                log.event('info', "Device " + ip + " is an unsupported type, or missing type name. Skipping.")
+######                continue
             
             ### COMMAND EXECUTION LOGIC ###
             # Run all commands on this device
@@ -291,13 +272,6 @@ class swITch:
         elif str.endswith('\n'):
             str = str.rstrip('\n')
         return str
-
-    def enable(self, dev, enable_username=''):
-
-        if enable_username is '': # just a password
-            dev.enable()
-        else: # username and password
-            dev.enable(default_username=enable_username) 
     
     def scp_handler(self, dev, mode):
         cmd='ip scp server enable'
