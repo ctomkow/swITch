@@ -4,7 +4,7 @@
 
 A python program which allows you to push commands to network devices. It can then dump the output to a file for later analysis.
 
-New: Implements netmiko's SCP file transfer! Use -f to transfer files to the device (specifies flash: directory only. This is a netmiko limitation). Remember, Cisco's scp server implementation relies on authentication AND authorization.
+New: Implements netmiko's SCP file transfer! (for Cisco device). Use -f to transfer files to the device (specifies flash: directory only. This is a netmiko limitation). Remember, Cisco's scp server implementation relies on authentication AND authorization.
 
 I have decided to re-factor this code to work with Netmiko (work by Kirk Byers). Better to solve new problems instead of re-inventing the wheel.
 

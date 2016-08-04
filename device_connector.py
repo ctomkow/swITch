@@ -1,5 +1,5 @@
 # Craig Tomkow
-# August 3, 2016
+# August 4, 2016
 #
 # Device class to handle selecting the correct device
 
