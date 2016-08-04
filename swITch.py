@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 # Craig Tomkow
-# July 27, 2016
+# August 4, 2016
 #
 # Send a config to a list of switches, specified in config files. Uses netmiko
 # for handling switch interaction.
+
 
 import datetime
 import logger
@@ -12,7 +13,6 @@ import device_connector
 import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-from netmiko import FileTransfer
 
 
 class swITch:
@@ -73,7 +73,6 @@ class swITch:
         
         args = parser.parse_args()
         
-    
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
             args.port, args.suppress, args.file, args.verbose, args.zomg)
 
@@ -91,6 +90,8 @@ class swITch:
             log = logger.logger("suppress")
         else: # Default output, no flags needed for this
             log = logger.logger("info")
+    
+        ##### I REALLY SHOULD MOVE ALL FILE DESCRIPTOR AND FILE PARSING TO IT'S OWN CLASS!
     
         ### FILE DESCRIPTOR STUFF ###
         # Attempt to get file descriptors for each provided txt file
@@ -115,7 +116,6 @@ class swITch:
                 log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth)
                 raise IOError('Can\'t open authentication file')
                 
-            
         raw_uname = access_file.readline()
         uname = self.strip_new_line(raw_uname)      
         raw_passwd = access_file.readline()
@@ -156,62 +156,36 @@ class swITch:
         for ip in list_of_IPs:
             
             ### SWITCH CONNECTION LOGIC ###  
-            # Add error handling around creating a device to handle if a device type is missing, etc.
-            # object = filename.classname
-            dev = device_connector.device_connector(ip, uname, passwd, enable_passwd)
+            try:
+                dev = device_connector.device_connector(ip, uname, passwd, enable_passwd)
+            except ValueError:
+                log.event('info', "WARNING: Could not connect to " + ip + 
+                "\nWARNING: Unsupported device or missing device type. Skipping it!")
+                continue #skips the rest of the for loop for this one device
             log.event('info', "SSH connection open to " + dev.ip)
             if enable:
-                dev.enable()
+                log.event('verbose', dev.enable())
             
             ### COMMAND EXECUTION LOGIC ###
-            # Run all commands on this device
             if commands:
                 for cmd in list_of_commands:
                     log.event('verbose', dev.find_prompt() + cmd)
-                    log_output = dev.send_command(cmd) # send command
-                    log.event('info', log_output)
+                    log.event('info', dev.send_command(cmd)) # send command
                     log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
-
                 dev.disconnect()
                 log.event('info', "SSH connection closed to " + ip)
                     
-            
-            ### IMAGE FILE TRANSFER LOGIC ###
+            ### FILE TRANSFER LOGIC ###
             if file_image:
-                dev.transfer_file(file_image, zomg)
-#                with FileTransfer(dev, source_file=file_image, dest_file=file_image) as scp_transfer:
-#                    if scp_transfer.check_file_exists():
-#                        log.event('info', file_image + " Already Exists")
-#                    else: ##### make this an elif so the program doesn't break when not enough space available...remove the valueerror...
-#                        if not scp_transfer.verify_space_available():
-#                            output = "Insufficient space available on remote device"
-#                            log.event('info', output)
-#                            #raise ValueError(output)
-#
-#                        log.event('verbose', 'Enabling SCP') 
-#                        log_output = self.scp_handler(dev, 'enable') # Enable SCP  
-#                        log.event('debug', 'DEBUG: ' + log_output)
-#                        if zomg:
-#                            log.event('debug', 'DEBUG: ' + self.enable_authorization(dev))
-#                        log.event('verbose', 'SCP enabled')
-#                        log.event('info', "Started Transferring at " + str(datetime.datetime.now()))         
-#                        scp_transfer.transfer_file() # Transfer file                   
-#                        log.event('info', "Finished transferring at " + str(datetime.datetime.now()))
-#                        log.event('verbose', 'Disabling SCP')
-#                        log_output = self.scp_handler(dev, 'disable') # Disable SCP
-#                        log.event('debug', 'DEBUG: ' + log_output)
-#                        if zomg:
-#                            log.event('debug', 'DEBUG: ' + self.disable_authorization(dev))
-#                        log.event('verbose', 'SCP disabled')
-#                        log.event('info', 'Verifying file...')
-#                        
-#                        if scp_transfer.verify_file():
-#                            log.event('info', 'Src and dest MD5 matches')
-#                        else:
-#                            output
-#                            log.event('info', 'MD5 mismatch between src and dest') 
-#                            raise ValueError(output)
-                                            
+                log.event('debug', "DEBUG PROMPT:" + dev.enable_scp())
+                if zomg:
+                    log.event('debug', "DEBUG PROMPT:" + dev.enable_authorization())
+                log.event('info', "Start transfer process: " + str(datetime.datetime.now()))
+                log.event('info', dev.transfer_file(file_image))  
+                log.event('info', "End transfer process " + str(datetime.datetime.now()))
+                log.event('debug', "DEBUG PROMPT:" + dev.disable_scp())
+                if zomg:
+                    log.event('debug', "DEBUG PROMPT:" + dev.disable_authorization())
  
         ### CLEANUP ###     
         # Close all files if they are open
@@ -268,20 +242,6 @@ class swITch:
         elif str.endswith('\n'):
             str = str.rstrip('\n')
         return str
-    
-#    def scp_handler(self, dev, mode):
-#        cmd='ip scp server enable'
-#        if mode == 'disable':
-#            cmd = 'no ' + cmd
-#            return dev.send_config_set([cmd])
-#        return dev.send_config_set([cmd])
-#    
-#    def enable_authorization(self, dev):
-#        return dev.send_config_set(['aaa authorization exec default group TACACS_PLUS local'])
-#        
-#    def disable_authorization(self, dev):
-#        return dev.send_config_set(['no aaa authorization exec default group TACACS_PLUS local'])
-    
     
 if __name__=='__main__':
     swITch()
