@@ -19,6 +19,7 @@ I have decided to re-factor this code to work with Netmiko (work by Kirk Byers).
 ### FUTURE DEVELOPMENT
 
 * Allowing to specify which section of config in the cli.config file gets pushed out to certain IP ranges.  Then you can list all the config for various devices (e.g. multi-vendor devices).
+* Implement multi-threading to push out commands/files concurrently.
 
 ### SETUP
 
