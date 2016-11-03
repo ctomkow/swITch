@@ -167,7 +167,7 @@ class swITch:
                 log.event('verbose', dev.enable())
             
             ### COMMAND EXECUTION LOGIC ###
-            if commands:
+            if commands or port_list:
                 for cmd in list_of_commands:
                     log.event('verbose', dev.find_prompt() + cmd)
                     log.event('info', dev.send_command(cmd)) # send command
