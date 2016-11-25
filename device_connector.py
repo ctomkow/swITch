@@ -73,6 +73,10 @@ class device_connector:
     def send_command(self, cmd):
         
         return self.device_connection.send_command(cmd)
+    
+    def get_device_type(self):
+        
+        return self.device_type
         
     def disconnect(self):
         

@@ -48,6 +48,10 @@ class swITch:
         mutExclusiveFlags.add_argument('-f', '--file', required=False, metavar='\b',
             help="""File name that will be transfered to device. Usually an image
             upgrade file.""")
+        mutExclusiveFlags.add_argument('t', '--test', required=False, metavar='\b',
+            help="""Test the target devices.  Currently only supports Cisco switches.
+            This is usually run against a set of switches after a code upgrade to do 
+            basic funtionality testing.""")
         mutExclusiveFlags.add_argument('-p', '--port', required=False, metavar='\b', 
             help="""File that has interface and port descriptions seperated 
             by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
@@ -78,12 +82,12 @@ class swITch:
         args = parser.parse_args()
         
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip, args.log_only,
-            args.port, args.suppress, args.file, args.verbose, args.zomg)
+            args.port, args.suppress, args.file, args.test, args.verbose, args.zomg)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, suppress, file_image, verbose, zomg):      
+    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, suppress, file_image, device_test, verbose, zomg):       
     
         ### LOGGING STUFF ###
         if debug:
@@ -192,6 +196,12 @@ class swITch:
                 log.event('debug', "DEBUG PROMPT:" + dev.disable_scp())
                 if zomg:
                     log.event('debug', "DEBUG PROMPT:" + dev.disable_authorization())
+            
+            ### DEVICE TEST LOGIC ###
+            if device_test:
+                # generate config list for testing purposes 
+                #test_config = device_test.device_test(dev.get_device_type())
+                pass
  
         ### CLEANUP ###     
         # Close all files if they are open
