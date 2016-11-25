@@ -57,35 +57,41 @@ class swITch:
         outputFlags.add_argument('-d', '--debug', required=False, action='store_true',
             help="""Prints out additional session action information beyond 
             the default output and the verbose flag. Debug is a superset of all
-            the flags. Debug --> verbose --> default/info --> suppress.""")
+            the flags. debug --> verbose --> default --> log-only --> suppress.""")
         outputFlags.add_argument('-h', '--help', action='help', 
             help="""show this help message and exit""")
+        outputFlags.add_argument('-l', '--log-only', action='store_true', required=False,
+            help="""Send ONLY the device STDOUT to log file. Log-only 
+            is a subset of the default output. debug --> verbose --> 
+            default --> log-only --> suppress.""")
         outputFlags.add_argument('-s', '--suppress', action='store_true', required=False,
             help="""Suppress all STDOUT, also no log file entries.  What is happening?! Suppress 
-            is a subset of the default/info output. Debug --> verbose --> 
-            default/info --> suppress.""")
+            is a subset of the default output. debug --> verbose --> 
+            default --> log-only --> suppress.""")
         outputFlags.add_argument('-v', '--verbose', action='store_true', required=False,
             help="""Prints out additional cli information.  This prints out the 
             cli prompt and command sent. Verbose is a subset of debug. 
-            Debug --> verbose --> default/info --> suppress.""")
+            debug --> verbose --> default --> log-only --> suppress.""")
         outputFlags.add_argument('-z', '--zomg', action='store_true', required=False,
             help=argparse.SUPPRESS)
         
         args = parser.parse_args()
         
-        self.main(args.auth, args.cmd, args.debug, args.enable, args.ip,
+        self.main(args.auth, args.cmd, args.debug, args.enable, args.ip, args.log_only,
             args.port, args.suppress, args.file, args.verbose, args.zomg)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, port_list, suppress, file_image, verbose, zomg):      
+    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, suppress, file_image, verbose, zomg):      
     
         ### LOGGING STUFF ###
         if debug:
             log = logger.logger("debug")
         elif verbose:
             log = logger.logger("verbose")
+        elif log_only:
+            log = logger.logger("log_only")
         elif suppress:
             log = logger.logger("suppress")
         else: # Default output, no flags needed for this
@@ -170,7 +176,7 @@ class swITch:
             if commands or port_list:
                 for cmd in list_of_commands:
                     log.event('verbose', dev.find_prompt() + cmd)
-                    log.event('info', dev.send_command(cmd)) # send command
+                    log.event('log_only', dev.send_command(cmd)) # send command
                     log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
                 dev.disconnect()
                 log.event('info', "SSH connection closed to " + ip)

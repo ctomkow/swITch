@@ -7,7 +7,7 @@
 class logger:
     
     
-    log_level_dict = {"suppress" : 0, "info" : 10, "verbose" : 20, "debug" : 30}
+    log_level_dict = {"suppress" : 0, "log_only" : 5, "info" : 10, "verbose" : 20, "debug" : 30}
     log_level = -1
     log_file = ''
     
