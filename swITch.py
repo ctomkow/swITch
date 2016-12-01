@@ -10,6 +10,7 @@
 import datetime
 import logger
 import device_connector
+import config
 import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -23,67 +24,54 @@ class swITch:
         # Arg Parsing
         parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter, add_help=False,
             description="""
-            This program logs into network devices using netmiko/paramiko, issue
-            commands, and capture the result in output.log \n
-            A typical example:\n
-            swITch.py -eva auth.txt -i 172.30.30.30,cisco_ios -c 'show vlan'""")
-            
-        reqFlags = parser.add_argument_group('Required flags')
-        reqFlags.add_argument('-a', '--auth', required=True, metavar='\b',
-            help="""Txt file with username on first line, passwd on second,
-            enablePasswd on third.""")
-        reqFlags.add_argument('-i', '--ip', required=True, metavar='\b',
-            help="""Txt file with one IP per line. Or a single IP in single 
-            quotes.""")
+            This program logs into network devices over SSH utilizing netmiko/paramiko,
+            issue commands, and sends STOUT to output.log file. Need to minimally
+            define login credentials in a conf.yaml file.\n
+            Two typical examples:\n
+            swITch.py (specifying device details in the conf.yaml file)
+            ... or ...
+            swITch.py -ei 172.30.30.30 -t cisco_ios -c 'show version'""")
       
-        optFlags = parser.add_argument_group('Privilege level')
+        optFlags = parser.add_argument_group('General flags')
         optFlags.add_argument('-e', '--enable', action='store_true', required=False,
-            help="""Privileged exec mode. Will be ignored if the device drops 
-            you into privileged mode on login.""")
-           
-        mutExclusiveFlags = parser.add_mutually_exclusive_group()
-        mutExclusiveFlags.add_argument('-c', '--cmd', required=False, metavar='\b',
-            help="""Txt file with one device command per line. Or a single 
-            command in single quotes.""")
-        mutExclusiveFlags.add_argument('-f', '--file', required=False, metavar='\b',
-            help="""File name that will be transfered to device. Usually an image
-            upgrade file.""")
-        mutExclusiveFlags.add_argument('-p', '--port', required=False, metavar='\b', 
-            help="""File that has interface and port descriptions seperated 
-            by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
-            sheet to generate the list.""")
-            
-        outputFlags = parser.add_argument_group('Output flags')
-        outputFlags.add_argument('-d', '--debug', required=False, action='store_true',
-            help="""Prints out additional session action information beyond 
-            the default output and the verbose flag. Debug is a superset of all
-            the flags. debug --> verbose --> default --> log-only --> suppress.""")
-        outputFlags.add_argument('-h', '--help', action='help', 
+            help="""Privileged exec mode.""")
+        optFlags.add_argument('-h', '--help', action='help', 
             help="""show this help message and exit""")
+        optFlags.add_argument('-p', '--port', required=False, action='store_true', 
+            help="""Indicating that port descriptions are in the yaml file
+            instead of general config commands. 'int gi1/0/1,des C001'""")
+           
+        overFlags = parser.add_argument_group('Override (parts of) configuration file')
+        overFlags.add_argument('-i', '--ip', required=False, metavar='\b',
+            help="""A single IP with device type. e.g. '172.30.30.30'""")
+        overFlags.add_argument('-t', '--type', required=False, metavar='\b',
+            help="""Define the device type. e.g. 'cisco_ios'""")
+        overFlags.add_argument('-c', '--cmd', required=False, metavar='\b',
+            help="""A single command. e.g. 'show version'""")
+        overFlags.add_argument('-f', '--file', required=False, metavar='\b',
+            help="""File name that will be transfered to device.""")
+            
+        outputFlags = parser.add_argument_group('Logging level (debug --> verbose --> default --> log-only --> suppress)')
+        outputFlags.add_argument('-d', '--debug', required=False, action='store_true',
+            help="""Prints all additional session information.""")
         outputFlags.add_argument('-l', '--log-only', action='store_true', required=False,
-            help="""Send ONLY the device STDOUT to log file. Log-only 
-            is a subset of the default output. debug --> verbose --> 
-            default --> log-only --> suppress.""")
+            help="""Send only the device STDOUT to log file.""")
         outputFlags.add_argument('-s', '--suppress', action='store_true', required=False,
-            help="""Suppress all STDOUT, also no log file entries.  What is happening?! Suppress 
-            is a subset of the default output. debug --> verbose --> 
-            default --> log-only --> suppress.""")
+            help="""Suppress all STDOUT, also no log file entries.""")
         outputFlags.add_argument('-v', '--verbose', action='store_true', required=False,
-            help="""Prints out additional cli information.  This prints out the 
-            cli prompt and command sent. Verbose is a subset of debug. 
-            debug --> verbose --> default --> log-only --> suppress.""")
+            help="""Prints out additional cli information.""")
         outputFlags.add_argument('-z', '--zomg', action='store_true', required=False,
             help=argparse.SUPPRESS)
         
         args = parser.parse_args()
         
-        self.main(args.auth, args.cmd, args.debug, args.enable, args.ip, args.log_only,
+        self.main(args.cmd, args.debug, args.enable, args.ip, args.type, args.log_only,
             args.port, args.suppress, args.file, args.verbose, args.zomg)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, suppress, file_image, verbose, zomg):      
+    def main(self, cli_cmd, debug, enable, cli_ip, cli_type, log_only, int_desc, suppress, file_image, verbose, zomg):      
     
         ### LOGGING STUFF ###
         if debug:
@@ -97,121 +85,114 @@ class swITch:
         else: # Default output, no flags needed for this
             log = logger.logger("info")
     
-        ##### I REALLY SHOULD MOVE ALL FILE DESCRIPTOR AND FILE PARSING TO IT'S OWN CLASS!
-    
-        ### FILE DESCRIPTOR STUFF ###
-        # Attempt to get file descriptors for each provided txt file
-        if ip_list:
-            ip_list_file = self.open_file(ip_list, 'r')
-            if ip_list_file == -1:
-                log.event('debug', 'DEBUG: Not a file.  Assuming ' + ip_list + ' is a valid IP')
-                ip_list_file = [ip_list] 
-        if commands:
-            cli_file = self.open_file(commands, 'r')
-            if cli_file == -1:
-                log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd')
-                cli_file = [commands]
-        if port_list:
-            port_list_file = self.open_file(port_list, 'r')
-            if port_list_file == -1:
-                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list)
-                raise IOError('Can\'t open port list file')
-        if auth:
-            access_file = self.open_file(auth, 'r') 
-            if access_file == -1:
-                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth)
-                raise IOError('Can\'t open authentication file')
-                
-        raw_uname = access_file.readline()
-        uname = self.strip_new_line(raw_uname)      
-        raw_passwd = access_file.readline()
-        passwd = self.strip_new_line(raw_passwd)       
-        raw_enable_passwd = access_file.readline()
-        enable_passwd = self.strip_new_line(raw_enable_passwd)
-
         # Initialize IP and command lists
-        list_of_commands = []
         list_of_IPs      = []
+        list_of_commands = []
+    
+        if cli_ip:
+            log.event('debug', 'DEBUG: Assuming "' + cli_ip + '" is a valid IP')
+            list_of_IPs = [cli_ip]
+        if cli_cmd:
+            log.event('debug', 'DEBUG: Assuming "' + cli_cmd + '" is a valid command')
+            list_of_commands = [cli_cmd]
+        if cli_type:
+            log.event('debug', "DEBUG: Assuming " + cli_type + " is a valid device type")
+#        if port_list:
+#            port_list_file = self.open_file(port_list, 'r')
+#            if port_list_file == -1:
+#                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list)
+#                raise IOError('Can\'t open port list file')
 
-        # Parse port description file
-        if port_list: 
-            for raw_cmd in port_list_file:
-                cmd = self.strip_new_line(raw_cmd)
-                if cmd.find(',') == -1:
-                    list_of_commands.append(cmd)
-                else:
+#        # Parse port description file
+#        if port_list: 
+#            for raw_cmd in port_list_file:
+#                cmd = self.strip_new_line(raw_cmd)
+#                if cmd.find(',') == -1:
+#                    list_of_commands.append(cmd)
+#                else:
+#                    cmd_array = cmd.split(',')
+#                    interface_cmd = cmd_array[0]
+#                    interface_cmd = interface_cmd.replace('\t', '')
+#                    description_cmd = cmd_array[1]
+#                    description_cmd = description_cmd.replace('\t', '')
+#                    list_of_commands.append(interface_cmd)
+#                    list_of_commands.append(description_cmd)
+
+        # Check whether general device config is being provided, or interface descriptions
+        # and set flags appropriately to be fed into the config class so it knows
+        if int_desc:
+            gen_conf_state = False
+            int_desc_state = True
+        else:
+            gen_conf_state = True
+            int_desc_state = False
+            
+        # Instantiate config class singleton
+        try:
+            config_singleton = config.config(gen_conf_state, int_desc_state)
+        except ValueError:
+            log.event('info', "WARNING: Could not read yaml config file! Ensure it is named 'conf.yaml'")
+
+        #CLI overriding the config file for the IP, command, and device type
+        if cli_ip:
+            config_singleton.set_a_device_group(cli_ip, cli_cmd, cli_type)
+
+        ### MAIN LOOP TO PARSE THROUGH ALL DEVICE GROUPS
+        while config_singleton.get_config_length() > 0:
+            
+            # Get details of a device grouping
+            device_type, list_of_IPs, list_of_commands = config_singleton.get_a_device_group()
+            
+            ### Pre-processing of interface description list into proper format (should be a put in a function)
+            if int_desc_state:
+                for cmd in list_of_commands:
+                    tmp_list.append('conf t')
                     cmd_array = cmd.split(',')
                     interface_cmd = cmd_array[0]
                     interface_cmd = interface_cmd.replace('\t', '')
                     description_cmd = cmd_array[1]
                     description_cmd = description_cmd.replace('\t', '')
-                    list_of_commands.append(interface_cmd)
-                    list_of_commands.append(description_cmd)
-        # Parse cli commands
-        if commands:    
-            for raw_cmd in cli_file:
-                cmd = self.strip_new_line(raw_cmd)
-                list_of_commands.append(cmd) 
-        # Parse IPs from file
-        if ip_list:
-            for raw_ip in ip_list_file:
-                ip = self.strip_new_line(raw_ip)
-                list_of_IPs.append(ip)
+                    tmp_list.append(interface_cmd)
+                    tmp_list.append(description_cmd)
+                list_of_commands = tmp_list
         
-        # All Device IPs
-        for ip in list_of_IPs:
-            
-            ### SWITCH CONNECTION LOGIC ###  
-            try:
-                dev = device_connector.device_connector(ip, uname, passwd, enable_passwd)
-            except ValueError:
-                log.event('info', "WARNING: Could not connect to " + ip + 
-                "\nWARNING: Unsupported device or missing device type. Skipping it!")
-                continue #skips the rest of the for loop for this one device
-            log.event('info', "SSH connection open to " + dev.ip)
-            if enable:
-                log.event('verbose', dev.enable())
-            
-            ### COMMAND EXECUTION LOGIC ###
-            if commands or port_list:
-                for cmd in list_of_commands:
-                    log.event('verbose', dev.find_prompt() + cmd)
-                    log.event('log_only', dev.send_command(cmd)) # send command
-                    log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
-                dev.disconnect()
-                log.event('info', "SSH connection closed to " + ip)
+            # All Device IPs of that specific group
+            for ip in list_of_IPs:
+
+                ### SWITCH CONNECTION LOGIC ###  
+                try:
+                    dev = device_connector.device_connector(ip, config_singleton.get_username(),
+                    config_singleton.get_password(), device_type, config_singleton.get_enable_password())
+                except ValueError:
+                    log.event('info', "WARNING: Could not connect to " + ip + 
+                    "\nWARNING: Unsupported device or missing device type. Skipping it!")
+                    continue #skips the rest of the for loop for this one device
+                log.event('info', "SSH connection open to " + dev.ip)
+                if enable:
+                    log.event('verbose', dev.enable())
                     
-            ### FILE TRANSFER LOGIC ###
-            if file_image:
-                log.event('debug', "DEBUG PROMPT:" + dev.enable_scp())
-                if zomg:
-                    log.event('debug', "DEBUG PROMPT:" + dev.enable_authorization())
-                log.event('info', "Start transfer process: " + str(datetime.datetime.now()))
-                log.event('info', dev.transfer_file(file_image))  
-                log.event('info', "End transfer process " + str(datetime.datetime.now()))
-                log.event('debug', "DEBUG PROMPT:" + dev.disable_scp())
-                if zomg:
-                    log.event('debug', "DEBUG PROMPT:" + dev.disable_authorization())
- 
+                ### COMMAND EXECUTION LOGIC ###
+                if gen_conf_state or int_desc_state:
+                    for cmd in list_of_commands:
+                        log.event('verbose', dev.find_prompt() + cmd)
+                        log.event('log_only', dev.send_command(cmd)) # send command
+                        log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
+                    dev.disconnect()
+                    log.event('info', "SSH connection closed to " + ip)
+
+                ### FILE TRANSFER LOGIC ###
+                if file_image:
+                    log.event('debug', "DEBUG PROMPT:" + dev.enable_scp())
+                    if zomg:
+                        log.event('debug', "DEBUG PROMPT:" + dev.enable_authorization())
+                    log.event('info', "Start transfer process: " + str(datetime.datetime.now()))
+                    log.event('info', dev.transfer_file(file_image))  
+                    log.event('info', "End transfer process " + str(datetime.datetime.now()))
+                    log.event('debug', "DEBUG PROMPT:" + dev.disable_scp())
+                    if zomg:
+                        log.event('debug', "DEBUG PROMPT:" + dev.disable_authorization())
+
         ### CLEANUP ###     
-        # Close all files if they are open
-        if commands:
-            op_code = self.close_file(cli_file)
-            if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(cli_file))
-        if port_list:
-            op_code = self.close_file(port_list_file)
-            if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(port_list_file))
-        if ip_list_file:
-            op_code = self.close_file(ip_list_file)
-            if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(ip_list_file))
-        if access_file:
-            op_code = self.close_file(access_file)
-            if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: '+ str(access_file))
-            
         # Last thing, close the output file
         log.close_log_file()
             
@@ -247,7 +228,8 @@ class swITch:
             str = str.rstrip('\r\n')
         elif str.endswith('\n'):
             str = str.rstrip('\n')
-        return str
+        return str 
+    
     
 if __name__=='__main__':
     swITch()

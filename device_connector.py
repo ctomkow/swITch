@@ -20,25 +20,20 @@ class device_connector:
     netmiko_device_details = {}
     device_connection = None
     
-    def __init__(self, raw_ip, username, password, enable_password=''):
+    def __init__(self, ip, username, password, device_type, enable_password=''):
         
-        self.raw_ip = raw_ip
+        self.ip = ip
         self.username = username
         self.password = password
         self.enable_password = enable_password
-        
-        if self.raw_ip.find('cisco_ios') is not -1:
-                self.ip = self.raw_ip.rstrip(',cisco_ios')
-                self.device_type = 'cisco_ios'
-                self.cisco_ios_normalize()
-                self.device_connection = self.connect()
-        elif self.raw_ip.find('hp_procurve') is not -1:
-                self.ip = self.raw_ip.rstrip(',hp_procurve')
-                self.device_type = 'hp_procurve'
-                self.hp_procurve_normalize()
-                self.device_connection = self.connect()
-        else: # Unsupported device or missing device type, raise exception
-            raise ValueError()
+        self.device_type = device_type
+
+        if device_type == 'cisco_ios':
+            self.cisco_ios_normalize()
+            self.device_connection = self.connect()
+        if device_type == 'hp_procurve':
+            self.hp_procurve_normalize()
+            self.device_connection = self.connect()
         
     def cisco_ios_normalize(self):
         
