@@ -60,7 +60,7 @@ class swITch:
             the flags. debug --> verbose --> default --> log-only --> suppress.""")
         outputFlags.add_argument('-h', '--help', action='help', 
             help="""show this help message and exit""")
-        outputFlags.add_argument('-l', '--log-only', action='store_true', required=False,
+        outputFlags.add_argument('-l', '--log_only', action='store_true', required=False,
             help="""Send ONLY the device STDOUT to log file. Log-only 
             is a subset of the default output. debug --> verbose --> 
             default --> log-only --> suppress.""")
