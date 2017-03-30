@@ -33,7 +33,7 @@ class device_connector:
                 self.ip = self.raw_ip.rstrip(',cisco_ios')
                 if connect_type == 'telnet':
                     print 'selected telnet'
-                    self.device_type = 'telnet'
+                    self.device_type = 'cisco_ios_telnet'
                 else:
                     self.device_type = 'cisco_ios'
                 self.cisco_ios_normalize()
