@@ -19,17 +19,23 @@ class device_connector:
     enable_password = ''
     netmiko_device_details = {}
     device_connection = None
+    connect_type = ''
     
-    def __init__(self, raw_ip, username, password, enable_password=''):
+    def __init__(self, raw_ip, username, password, enable_password='', connect_type='ssh'):
         
         self.raw_ip = raw_ip
         self.username = username
         self.password = password
         self.enable_password = enable_password
+        self.connect_type = connect_type
         
         if self.raw_ip.find('cisco_ios') is not -1:
                 self.ip = self.raw_ip.rstrip(',cisco_ios')
-                self.device_type = 'cisco_ios'
+                if connect_type == 'telnet':
+                    print 'selected telnet'
+                    self.device_type = 'telnet'
+                else:
+                    self.device_type = 'cisco_ios'
                 self.cisco_ios_normalize()
                 self.device_connection = self.connect()
         elif self.raw_ip.find('hp_procurve') is not -1:

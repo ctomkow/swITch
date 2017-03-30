@@ -36,10 +36,12 @@ class swITch:
             help="""Txt file with one IP per line. Or a single IP in single 
             quotes.""")
       
-        optFlags = parser.add_argument_group('Privilege level')
+        optFlags = parser.add_argument_group('Other flags')
         optFlags.add_argument('-e', '--enable', action='store_true', required=False,
             help="""Privileged exec mode. Will be ignored if the device drops 
             you into privileged mode on login.""")
+        optFlags.add_argument('-t', '--telnet', action='store_true', required=False,
+            help="""Connect using telnet instead of SSH. Tsk, tsk.""")
            
         mutExclusiveFlags = parser.add_mutually_exclusive_group()
         mutExclusiveFlags.add_argument('-c', '--cmd', required=False, metavar='\b',
@@ -78,12 +80,12 @@ class swITch:
         args = parser.parse_args()
         
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip, args.log_only,
-            args.port, args.suppress, args.file, args.verbose, args.zomg)
+            args.port, args.suppress, args.file, args.verbose, args.zomg, args.telnet)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, suppress, file_image, verbose, zomg):      
+    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, suppress, file_image, verbose, zomg, telnet):      
     
         ### LOGGING STUFF ###
         if debug:
@@ -157,13 +159,18 @@ class swITch:
             for raw_ip in ip_list_file:
                 ip = self.strip_new_line(raw_ip)
                 list_of_IPs.append(ip)
+        # Parse connection type
+        if telnet:
+            connect_type = 'telnet'
+        else:
+            connect_type = 'ssh'
         
         # All Device IPs
         for ip in list_of_IPs:
             
             ### SWITCH CONNECTION LOGIC ###  
             try:
-                dev = device_connector.device_connector(ip, uname, passwd, enable_passwd)
+                dev = device_connector.device_connector(ip, uname, passwd, enable_passwd, connect_type)
             except ValueError:
                 log.event('info', "WARNING: Could not connect to " + ip + 
                 "\nWARNING: Unsupported device or missing device type. Skipping it!")
