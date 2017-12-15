@@ -49,6 +49,7 @@ class device_connector:
             'password':self.password,
             'secret':self.enable_password,
             'verbose':False,
+            'global_delay_factor': .5,
         }
     ##### HP is currently broken it seems (when needing uname/pass for enable) Why oh why!
     def hp_procurve_normalize(self):
