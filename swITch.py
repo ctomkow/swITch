@@ -179,7 +179,7 @@ class swITch:
                     log.event('log_only', dev.send_command(cmd)) # send command
                     log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
                 dev.disconnect()
-                log.event('info', "SSH connection closed to " + ip)
+                log.event('info', "\n" + "SSH connection closed to " + ip + "\n")
                     
             ### FILE TRANSFER LOGIC ###
             if file_image:
