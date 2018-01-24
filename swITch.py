@@ -104,22 +104,22 @@ class swITch:
         if ip_list:
             ip_list_file = self.open_file(ip_list, 'r')
             if ip_list_file == -1:
-                log.event('debug', 'DEBUG: Not a file.  Assuming ' + ip_list + ' is a valid IP')
+                log.event('debug', 'DEBUG: Not a file.  Assuming ' + ip_list + ' is a valid IP' + "\n")
                 ip_list_file = [ip_list] 
         if commands:
             cli_file = self.open_file(commands, 'r')
             if cli_file == -1:
-                log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd')
+                log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd' + "\n")
                 cli_file = [commands]
         if port_list:
             port_list_file = self.open_file(port_list, 'r')
             if port_list_file == -1:
-                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list)
+                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list + "\n")
                 raise IOError('Can\'t open port list file')
         if auth:
             access_file = self.open_file(auth, 'r') 
             if access_file == -1:
-                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth)
+                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth + "\n")
                 raise IOError('Can\'t open authentication file')
                 
         raw_uname = access_file.readline()
@@ -176,9 +176,9 @@ class swITch:
             ### COMMAND EXECUTION LOGIC ###
             if commands or port_list:
                 for cmd in list_of_commands:
-                    log.event('verbose', dev.find_prompt() + cmd)
+                    log.event('verbose', dev.find_prompt() + cmd + "\n")
                     log.event('log_only', dev.send_command(cmd)) # send command
-                    log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
+                    log.event('debug', "DEBUG PROMPT:" + dev.find_prompt() + "\n")
                 dev.disconnect()
                 log.event('info', "\n")
                 log.event('info', "SSH connection closed to " + ip + "\n")
@@ -200,19 +200,19 @@ class swITch:
         if commands:
             op_code = self.close_file(cli_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(cli_file))
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(cli_file) + "\n")
         if port_list:
             op_code = self.close_file(port_list_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(port_list_file))
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(port_list_file) + "\n")
         if ip_list_file:
             op_code = self.close_file(ip_list_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(ip_list_file))
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(ip_list_file) + "\n")
         if access_file:
             op_code = self.close_file(access_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: '+ str(access_file))
+                log.event('debug', 'DEBUG: File that can\'t be closed: '+ str(access_file) + "\n")
             
         # Last thing, close the output file
         log.close_log_file()
