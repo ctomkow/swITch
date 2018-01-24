@@ -177,11 +177,11 @@ class swITch:
             if commands or port_list:
                 for cmd in list_of_commands:
                     log.event('verbose', dev.find_prompt() + cmd + "\n")
-                    log.event('log_only', dev.send_command(cmd)) # send command
+                    log.event('log_only', dev.send_command(cmd) + "\n") # send command
                     log.event('debug', "DEBUG PROMPT:" + dev.find_prompt() + "\n")
                 dev.disconnect()
                 log.event('info', "\n")
-                log.event('info', "SSH connection closed to " + ip + "\n")
+                log.event('info', "SSH connection closed to " + dev.ip + "\n")
                     
             ### FILE TRANSFER LOGIC ###
             if file_image:
