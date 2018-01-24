@@ -180,7 +180,6 @@ class swITch:
                     log.event('log_only', dev.send_command(cmd) + "\n") # send command
                     log.event('debug', "DEBUG PROMPT:" + dev.find_prompt() + "\n")
                 dev.disconnect()
-                log.event('info', "\n")
                 log.event('info', "SSH connection closed to " + dev.ip + "\n")
                     
             ### FILE TRANSFER LOGIC ###
