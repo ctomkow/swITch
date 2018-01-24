@@ -169,6 +169,7 @@ class swITch:
                 "\nWARNING: Unsupported device or missing device type. Skipping it!")
                 continue #skips the rest of the for loop for this one device
             log.event('info', "SSH connection open to " + dev.ip)
+            log.event('info', "\n")
             if enable:
                 log.event('verbose', dev.enable())
             
@@ -179,7 +180,8 @@ class swITch:
                     log.event('log_only', dev.send_command(cmd)) # send command
                     log.event('debug', "DEBUG PROMPT:" + dev.find_prompt())
                 dev.disconnect()
-                log.event('info', "\n" + "SSH connection closed to " + ip + "\n")
+                log.event('info', "\n")
+                log.event('info', "SSH connection closed to " + ip + "\n")
                     
             ### FILE TRANSFER LOGIC ###
             if file_image:
