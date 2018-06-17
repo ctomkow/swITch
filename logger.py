@@ -23,7 +23,7 @@ class logger:
         
         target_log_level = self.log_level_dict[target_log_level_mnemonic]
         if target_log_level <= self.log_level:
-            print msg
+            print(msg)
             self.log_file.write(msg)
         else:
             pass
