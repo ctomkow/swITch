@@ -7,6 +7,8 @@
 from netmiko import ConnectHandler
 from netmiko import FileTransfer
 
+from sentry_pdu import SentryPdu
+
 
 class device_connector:
     
@@ -37,6 +39,12 @@ class device_connector:
                 self.device_type = 'hp_procurve'
                 self.hp_procurve_normalize()
                 self.device_connection = self.connect()
+        elif self.raw_ip.find('sentry_pdu') is not -1:
+                self.ip = self.raw_ip.rstrip(',sentry_pdu')
+                self.device_type = 'sentry_pdu'
+                self.sentry_pdu_normalize()
+                self.sentry_pdu = SentryPdu(self.netmiko_device_details)
+                self.device_connection = self.sentry_pdu.connect()
         else: # Unsupported device or missing device type, raise exception
             raise ValueError()
         
@@ -61,6 +69,17 @@ class device_connector:
             'password':self.password,
             'secret':self.password,
             'verbose':False,
+        }
+
+    def sentry_pdu_normalize(self):
+
+        # device list: https://github.com/ktbyers/netmiko/blob/develop/netmiko/ssh_dispatcher.py
+        self.netmiko_device_details = {
+            'device_type': 'accedian',
+            'ip': self.ip,
+            'username': self.username,
+            'password': self.password,
+            'verbose': False,
         }
     
     def connect(self):
