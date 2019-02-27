@@ -30,17 +30,17 @@ class device_connector:
         self.enable_password = enable_password
         
         if self.raw_ip.find('cisco_ios') is not -1:
-                self.ip = self.raw_ip.rstrip(',cisco_ios')
+                self.ip = self.raw_ip.rstrip('cisco_ios').replace(',', '')
                 self.device_type = 'cisco_ios'
                 self.cisco_ios_normalize()
                 self.device_connection = self.connect()
         elif self.raw_ip.find('hp_procurve') is not -1:
-                self.ip = self.raw_ip.rstrip(',hp_procurve')
+                self.ip = self.raw_ip.rstrip('hp_procurve').replace(',', '')
                 self.device_type = 'hp_procurve'
                 self.hp_procurve_normalize()
                 self.device_connection = self.connect()
         elif self.raw_ip.find('sentry_pdu') is not -1:
-                self.ip = self.raw_ip.rstrip(',sentry_pdu')
+                self.ip = self.raw_ip.rstrip('sentry_pdu').replace(',', '')
                 self.device_type = 'sentry_pdu'
                 self.sentry_pdu_normalize()
                 self.sentry_pdu = SentryPdu(self.netmiko_device_details)
