@@ -104,22 +104,22 @@ class swITch:
         if ip_list:
             ip_list_file = self.open_file(ip_list, 'r')
             if ip_list_file == -1:
-                log.event('debug', 'DEBUG: Not a file.  Assuming ' + ip_list + ' is a valid IP' + "\n")
+                log.event('debug', 'DEBUG: Not a file.  Assuming ' + ip_list + ' is a valid IP')
                 ip_list_file = [ip_list] 
         if commands:
             cli_file = self.open_file(commands, 'r')
             if cli_file == -1:
-                log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd' + "\n")
+                log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd')
                 cli_file = [commands]
         if port_list:
             port_list_file = self.open_file(port_list, 'r')
             if port_list_file == -1:
-                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list + "\n")
+                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list)
                 raise IOError('Can\'t open port list file')
         if auth:
             access_file = self.open_file(auth, 'r') 
             if access_file == -1:
-                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth + "\n")
+                log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth)
                 raise IOError('Can\'t open authentication file')
                 
         raw_uname = access_file.readline()
@@ -157,15 +157,15 @@ class swITch:
             for raw_ip in ip_list_file:
                 ip = self.strip_new_line(raw_ip)
                 list_of_IPs.append(ip)
-        
         # All Device IPs
         for ip in list_of_IPs:
             
             ### SWITCH CONNECTION LOGIC ###  
             try:
                 dev = device_connector.device_connector(ip, uname, passwd, enable_passwd)
-            except ValueError:
-                log.event('info', "WARNING: Could not connect to " + ip + 
+            except ValueError as e:
+                log.event('debug', str(e))
+                log.event('info', "WARNING: Could not connect to " + ip +
                 "\nWARNING: Unsupported device or missing device type. Skipping it!")
                 continue #skips the rest of the for loop for this one device
             log.event('info', "SSH connection open to " + dev.ip)
@@ -199,19 +199,19 @@ class swITch:
         if commands:
             op_code = self.close_file(cli_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(cli_file) + "\n")
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(cli_file))
         if port_list:
             op_code = self.close_file(port_list_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(port_list_file) + "\n")
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(port_list_file))
         if ip_list_file:
             op_code = self.close_file(ip_list_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(ip_list_file) + "\n")
+                log.event('debug', 'DEBUG: File that can\'t be closed: ' + str(ip_list_file))
         if access_file:
             op_code = self.close_file(access_file)
             if op_code == -1:
-                log.event('debug', 'DEBUG: File that can\'t be closed: '+ str(access_file) + "\n")
+                log.event('debug', 'DEBUG: File that can\'t be closed: '+ str(access_file))
             
         # Last thing, close the output file
         log.close_log_file()
