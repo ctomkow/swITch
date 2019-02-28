@@ -78,3 +78,6 @@ Other examples.
 
 `$python ./swITch.py -i '10.0.0.10,sentry_pdu' -c 'LIST PORTS' -a auth.txt`
 
+### Notes
+* You can comment out lines in (port desc, ip list, cli conf)input files with a '#'. 
+
