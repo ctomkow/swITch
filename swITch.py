@@ -134,8 +134,11 @@ class swITch:
         list_of_IPs      = []
 
         # Parse port description file
-        if port_list: 
+        if port_list:
             for raw_cmd in port_list_file:
+                if self.is_comment(self.strip_whitespace(raw_cmd)):
+                    log.event('debug', "skipping comment:" + raw_cmd)
+                    continue
                 cmd = self.strip_new_line(raw_cmd)
                 if cmd.find(',') == -1:
                     list_of_commands.append(cmd)
@@ -148,13 +151,19 @@ class swITch:
                     list_of_commands.append(interface_cmd)
                     list_of_commands.append(description_cmd)
         # Parse cli commands
-        if commands:    
+        if commands:
             for raw_cmd in cli_file:
+                if self.is_comment(self.strip_whitespace(raw_cmd)):
+                    log.event('debug', "skipping comment:" + raw_cmd)
+                    continue
                 cmd = self.strip_new_line(raw_cmd)
                 list_of_commands.append(cmd) 
         # Parse IPs from file
         if ip_list:
             for raw_ip in ip_list_file:
+                if self.is_comment(self.strip_whitespace(raw_ip)):
+                    log.event('debug', "skipping comment:" + raw_ip)
+                    continue
                 ip = self.strip_new_line(raw_ip)
                 list_of_IPs.append(ip)
         # All Device IPs
@@ -249,6 +258,18 @@ class swITch:
         elif str.endswith('\n'):
             str = str.rstrip('\n')
         return str
+
+    def strip_whitespace(self, str):
+
+        return str.strip()
+
+    def is_comment(self, str):
+
+        if str[0] == '#':
+            return True
+        else:
+            return False
+
     
 if __name__=='__main__':
     swITch()
