@@ -45,6 +45,11 @@ class device_connector:
                 self.sentry_pdu_normalize()
                 self.sentry_pdu = SentryPdu(self.netmiko_device_details)
                 self.device_connection = self.sentry_pdu.connect()
+        elif self.raw_ip.find('juniper') is not -1:
+                self.ip = self.raw_ip.rstrip('juniper_junos').replace(',', '')
+                self.device_type = 'juniper_junos'
+                self.juniper_junos_normalize()
+                self.device_connection = self.connect()
         else: # Unsupported device or missing device type, raise exception
             raise ValueError()
         
@@ -76,6 +81,17 @@ class device_connector:
         # device list: https://github.com/ktbyers/netmiko/blob/develop/netmiko/ssh_dispatcher.py
         self.netmiko_device_details = {
             'device_type': 'accedian',
+            'ip': self.ip,
+            'username': self.username,
+            'password': self.password,
+            'verbose': False,
+        }
+
+    def juniper_junos_normalize(self):
+
+        # device list: https://github.com/ktbyers/netmiko/blob/develop/netmiko/ssh_dispatcher.py
+        self.netmiko_device_details = {
+            'device_type': self.device_type,
             'ip': self.ip,
             'username': self.username,
             'password': self.password,

@@ -11,11 +11,12 @@ Implements netmiko's SCP file transfer for Cisco devices. Use -f to transfer fil
 
 ### DEVICE SUPPORT
 
-* Currently Cisco, HP, and Sentry PDUs.
+* Currently Cisco, HP, Sentry PDUs, and Juniper junos.
 * What to append at the end of each IP address
   * `,cisco_ios`
   * `,hp_procurve`
   * `,sentry_pdu`
+  * `,juniper_junos`
 
 ### FUTURE DEVELOPMENT
 
