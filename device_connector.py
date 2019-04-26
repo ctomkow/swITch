@@ -109,6 +109,10 @@ class device_connector:
     def send_command(self, cmd):
         
         return self.device_connection.send_command(cmd)
+
+    def send_config_set(self, set_list):
+
+        return self.device_connection.send_config_set(set_list)
         
     def disconnect(self):
         

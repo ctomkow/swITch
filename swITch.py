@@ -52,6 +52,9 @@ class swITch:
             help="""File that has interface and port descriptions seperated 
             by a comma per line. "int gi1/0/1 ,des C001".  Tip, use an excel 
             sheet to generate the list.""")
+        mutExclusiveFlags.add_argument('-s', '--set', required=False, metavar='\b',
+                    help="""Txt file with one configuration command per line. Or
+                    a single command in single quotes.""")
             
         outputFlags = parser.add_argument_group('Output flags')
         outputFlags.add_argument('-d', '--debug', required=False, action='store_true',
@@ -64,7 +67,7 @@ class swITch:
             help="""Send ONLY the device STDOUT to log file. Log-only 
             is a subset of the default output. debug --> verbose --> 
             default --> log-only --> suppress.""")
-        outputFlags.add_argument('-s', '--suppress', action='store_true', required=False,
+        outputFlags.add_argument('-q', '--quiet', action='store_true', required=False,
             help="""Suppress all STDOUT, also no log file entries.  What is happening?! Suppress 
             is a subset of the default output. debug --> verbose --> 
             default --> log-only --> suppress.""")
@@ -78,12 +81,12 @@ class swITch:
         args = parser.parse_args()
         
         self.main(args.auth, args.cmd, args.debug, args.enable, args.ip, args.log_only,
-            args.port, args.suppress, args.file, args.verbose, args.zomg)
+            args.port, args.set, args.quiet, args.file, args.verbose, args.zomg)
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
-    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, suppress, file_image, verbose, zomg):      
+    def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, set, quiet, file_image, verbose, zomg):
     
         ### LOGGING STUFF ###
         if debug:
@@ -92,7 +95,7 @@ class swITch:
             log = logger.logger("verbose")
         elif log_only:
             log = logger.logger("log_only")
-        elif suppress:
+        elif quiet:
             log = logger.logger("suppress")
         else: # Default output, no flags needed for this
             log = logger.logger("info")
@@ -111,6 +114,11 @@ class swITch:
             if cli_file == -1:
                 log.event('debug', 'DEBUG: Not a file. Assuming ' + commands + ' is a valid cmd')
                 cli_file = [commands]
+        if set:
+            set_file = self.open_file(set, 'r')
+            if set_file == -1:
+                log.event('debug', 'DEBUG: Not a file. Assuming ' + set + ' is a valid configuration cmd')
+                set_file = [set]
         if port_list:
             port_list_file = self.open_file(port_list, 'r')
             if port_list_file == -1:
@@ -132,6 +140,7 @@ class swITch:
         # Initialize IP and command lists
         list_of_commands = []
         list_of_IPs      = []
+        list_of_set_cmds = []
 
         # Parse port description file
         if port_list:
@@ -157,7 +166,15 @@ class swITch:
                     log.event('debug', "skipping comment:" + raw_cmd)
                     continue
                 cmd = self.strip_new_line(raw_cmd)
-                list_of_commands.append(cmd) 
+                list_of_commands.append(cmd)
+        # parse cli configuration commands
+        if set:
+            for raw_cmd in set_file:
+                if self.is_comment(self.strip_whitespace(raw_cmd)):
+                    log.event('debug', "skipping comment:" + raw_cmd)
+                    continue
+                cmd = self.strip_new_line(raw_cmd)
+                list_of_set_cmds.append(cmd)
         # Parse IPs from file
         if ip_list:
             for raw_ip in ip_list_file:
@@ -188,6 +205,14 @@ class swITch:
                     log.event('verbose', dev.find_prompt() + cmd + "\n")
                     log.event('log_only', dev.send_command(cmd) + "\n") # send command
                     log.event('debug', "DEBUG PROMPT:" + dev.find_prompt() + "\n")
+                dev.disconnect()
+                log.event('info', "SSH connection closed to " + dev.ip + "\n")
+
+            ### CONFIGURATION EXECUTION LOGIC ###
+            if set:
+                log.event('verbose', dev.find_prompt() + cmd + "\n")
+                log.event('log_only', dev.send_config_set(list_of_set_cmds) + "\n")  # send command
+                log.event('debug', "DEBUG PROMPT:" + dev.find_prompt() + "\n")
                 dev.disconnect()
                 log.event('info', "SSH connection closed to " + dev.ip + "\n")
                     
