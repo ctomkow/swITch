@@ -35,12 +35,23 @@ Implements netmiko's SCP file transfer for Cisco devices. Use -f to transfer fil
     172.30.30.31,cisco_ios
     ...
     ```
-* `cli.config` (1<sup>st</sup> - n<sup>th</sup> line: cli command)
+* `cli.cmd` (1<sup>st</sup> - n<sup>th</sup> line: cli command)
     ```
-    config t
     show interfaces
     ...
     ```
+* `cli.set` (1<sup>st</sup> - n<sup>th</sup> line: cli command)
+    ```
+    ip name-server 1.1.1.1
+    ...
+    ```
+* `auth.txt` (1<sup>st</sup> line: username, 2<sup>nd</sup> line: password, 3<sup>rd</sup> line: enable password)
+    ```
+    joe
+    password
+    enableME
+    ```
+(note: port description below is currently legacy that doesn't use the newer send_config_set netmiko method. It still works on Cisco devices as-is, however.)
 * `port.desc` (1<sup>st</sup> line: config t, 2<sup>nd</sup> - n<sup>th</sup> line: interface, port description)
     ```
     config t
@@ -50,13 +61,6 @@ Implements netmiko's SCP file transfer for Cisco devices. Use -f to transfer fil
     .
     .
     interface gi0/48,description Port C048 : 1-87
-    ```
-
-* `auth.txt` (1<sup>st</sup> line: username, 2<sup>nd</sup> line: password, 3<sup>rd</sup> line: enable password)
-    ```
-    joe
-    password
-    enableME
     ```
 
 ### RUN
@@ -73,11 +77,14 @@ Other examples.
 
 `$python ./swITch.py -e -i 172.30.30.30 -f c3560-ios-image.bin -a auth.txt`
 
-`$python ./swITch.py -e -i ip.list -c cli.config -a auth.txt`
+`$python ./swITch.py -e -i ip.list -c cli.cmd -a auth.txt`
+
+`$python ./swITch.py -e -i ip.list -s 'ip name-server 1.1.1.1' -a auth.txt`
 
 `$python ./swITch.py -e -i ip.list -p port.desc -a auth.txt`
 
 `$python ./swITch.py -i '10.0.0.10,sentry_pdu' -c 'LIST PORTS' -a auth.txt`
+
 
 ### Notes
 * You can comment out lines in (port desc, ip list, cli conf)input files with a '#'. 
