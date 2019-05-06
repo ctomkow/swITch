@@ -90,6 +90,7 @@ class device_connector:
             'username': self.username,
             'password': self.password,
             'verbose': False,
+            'global_delay_factor': 1.5,
         }
 
     def juniper_junos_normalize(self):
@@ -101,6 +102,7 @@ class device_connector:
             'username': self.username,
             'password': self.password,
             'verbose': False,
+            'global_delay_factor': 2.0,
         }
 
     def paloalto_panos_normalize(self):
@@ -128,7 +130,10 @@ class device_connector:
 
     def send_config_set(self, set_list):
 
-        return self.device_connection.send_config_set(set_list)
+        if self.device_type == 'juniper_junos':
+            return self.device_connection.send_config_set(set_list, config_mode_command='configure exclusive')
+        else:
+            return self.device_connection.send_config_set(set_list)
         
     def disconnect(self):
         
