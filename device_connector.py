@@ -90,7 +90,7 @@ class device_connector:
             'username': self.username,
             'password': self.password,
             'verbose': False,
-            'global_delay_factor': 1.5,
+            'global_delay_factor': 2.0,
         }
 
     def juniper_junos_normalize(self):
