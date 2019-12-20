@@ -290,6 +290,9 @@ class swITch:
 
     def is_comment(self, str):
 
+        if not str:
+            return True
+
         if str[0] == '#':
             return True
         else:
