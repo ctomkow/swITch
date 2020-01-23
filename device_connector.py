@@ -136,20 +136,28 @@ class device_connector:
             return self.device_connection.send_config_set(set_list, exit_config_mode=True)
         elif self.device_type == 'hp_procurve':
             return self.device_connection.send_config_set(set_list, exit_config_mode=True)
+        elif self.device_type == 'sentry_pdu':
+            return self.device_connection.send_config_set(set_list, exit_config_mode=False)
         else:
             pass
 
     def save_config_and_exit(self):
 
         buf = ""
-        if self.device_type == 'juniper_junos':
-            buf += self.device_connection.commit(and_quit=True)
-        elif self.device_type == 'cisco_ios':
-            buf += self.device_connection.save_config()
-        elif self.device_type == 'hp_procurve':
-            buf += self.device_connection.save_config()
-        else:
-            pass
+        try:
+            if self.device_type == 'juniper_junos':
+                buf += self.device_connection.commit(and_quit=True)
+            elif self.device_type == 'cisco_ios':
+                buf += self.device_connection.save_config()
+            elif self.device_type == 'hp_procurve':
+                buf += self.device_connection.save_config()
+            elif self.device_type == 'sentry_pdu':
+                buf += self.device_connection.save_config()
+            else:
+                pass
+        except NotImplementedError:  # e.g. sentry_pdu uses netmiko's accedian device and it doesn't impl save_config
+            return buf
+
         buf += self.device_connection.exit_config_mode()
         return buf
         
