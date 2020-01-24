@@ -213,6 +213,7 @@ class swITch:
                 log.event('verbose', dev.find_prompt() + cmd + "\n")
                 log.event('log_only', dev.send_config_set(list_of_set_cmds) + "\n")  # send command
                 log.event('debug', "DEBUG PROMPT:" + dev.find_prompt() + "\n")
+                log.event('verbose', dev.save_config_and_exit() + "\n")
                 dev.disconnect()
                 log.event('info', "SSH connection closed to " + dev.ip + "\n")
                     

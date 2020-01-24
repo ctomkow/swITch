@@ -131,9 +131,43 @@ class device_connector:
     def send_config_set(self, set_list):
 
         if self.device_type == 'juniper_junos':
-            return self.device_connection.send_config_set(set_list, config_mode_command='configure exclusive')
+            return self.device_connection.send_config_set(set_list, exit_config_mode=False, config_mode_command='configure exclusive')
+        elif self.device_type == 'cisco_ios':
+            return self.device_connection.send_config_set(set_list, exit_config_mode=True)
+        elif self.device_type == 'hp_procurve':
+            return self.device_connection.send_config_set(set_list, exit_config_mode=True)
+        elif self.device_type == 'sentry_pdu':
+            return self.device_connection.send_config_set(set_list, exit_config_mode=False)
+        elif self.device_type == 'paloalto_panos':
+            try:
+                return self.device_connection.send_config_set(set_list, exit_config_mode=False)
+            except OSError:
+                return "Did not find expected pattern. Likely nothing to commit!"
         else:
-            return self.device_connection.send_config_set(set_list)
+            pass
+
+    def save_config_and_exit(self):
+
+        buf = ""
+
+        if self.device_type == 'juniper_junos':
+            buf += self.device_connection.commit(and_quit=True)
+        elif self.device_type == 'cisco_ios':
+            buf += self.device_connection.save_config()
+        elif self.device_type == 'hp_procurve':
+            buf += self.device_connection.save_config()
+        elif self.device_type == 'sentry_pdu':
+            try: # e.g. sentry_pdu uses netmiko's accedian device - it doesn't impl save_config as config is auto-saved
+                buf += self.device_connection.save_config()
+            except NotImplementedError:
+                return buf
+        elif self.device_type == 'paloalto_panos':
+            buf += self.device_connection.commit()
+        else:
+            pass
+
+        buf += self.device_connection.exit_config_mode()
+        return buf
         
     def disconnect(self):
         
