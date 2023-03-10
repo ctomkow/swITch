@@ -7,7 +7,7 @@
 from netmiko import ConnectHandler
 from netmiko import FileTransfer
 
-from sentry_pdu import SentryPdu
+from swITch.sentry_pdu import SentryPdu
 
 
 class device_connector:

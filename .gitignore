@@ -1,0 +1,9 @@
+venv
+auth.txt
+ip.list
+cli.cmd
+cli.set
+port.desc
+output.log
+.idea
+src/swITch/__pycache__

@@ -26,9 +26,8 @@ Implements netmiko's SCP file transfer for Cisco devices. Use -f to transfer fil
 
 ### SETUP
 
-1. `sudo apt-get install python3`
-2. `pip3 install netmiko`
-3. Create the following files
+1. `pip3 install git+https://github.com/ctomkow/swITch.git`
+2. Create the following files
 * `ip.list` (1<sup>st</sup> - n<sup>th</sup> line: IP address, device type)
     ```
     172.30.30.30,hp_procurve
@@ -67,23 +66,23 @@ Implements netmiko's SCP file transfer for Cisco devices. Use -f to transfer fil
 
 A common command sequence.
 
-`$python ./swITch.py -eva auth.txt -i ip.list -c 'show runn'`
+`$ swITch -eva auth.txt -i ip.list -c 'show runn'`
 
 Other examples.
 
-`$python ./swITch.py -h`
+`$ swITch -h`
 
-`$python ./swITch.py -i '192.168.0.4,cisco_ios' -c 'show vlan' -a auth.txt`
+`$ swITch -i '192.168.0.4,cisco_ios' -c 'show vlan' -a auth.txt`
 
-`$python ./swITch.py -e -i 172.30.30.30 -f c3560-ios-image.bin -a auth.txt`
+`$ swITch -e -i 172.30.30.30 -f c3560-ios-image.bin -a auth.txt`
 
-`$python ./swITch.py -e -i ip.list -c cli.cmd -a auth.txt`
+`$ swITch -e -i ip.list -c cli.cmd -a auth.txt`
 
-`$python ./swITch.py -e -i ip.list -s 'ip name-server 1.1.1.1' -a auth.txt`
+`$ swITch -e -i ip.list -s 'ip name-server 1.1.1.1' -a auth.txt`
 
-`$python ./swITch.py -e -i ip.list -p port.desc -a auth.txt`
+`$ swITch -e -i ip.list -p port.desc -a auth.txt`
 
-`$python ./swITch.py -i '10.0.0.10,sentry_pdu' -c 'LIST PORTS' -a auth.txt`
+`$ swITch -i '10.0.0.10,sentry_pdu' -c 'LIST PORTS' -a auth.txt`
 
 
 ### Notes

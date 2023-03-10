@@ -15,7 +15,7 @@ class logger:
         
         self.log_level = self.log_level_dict[log_level_mnemonic]
         try:
-            self.log_file = open('output.log', 'w')
+            self.log_file = open('../../output.log', 'w')
         except IOError:
             return -1
     

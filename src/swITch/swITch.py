@@ -8,8 +8,8 @@
 
 
 import datetime
-import logger
-import device_connector
+from swITch.logger import logger
+from swITch.device_connector import device_connector
 import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -90,15 +90,15 @@ class swITch:
     
         ### LOGGING STUFF ###
         if debug:
-            log = logger.logger("debug")
+            log = logger("debug")
         elif verbose:
-            log = logger.logger("verbose")
+            log = logger("verbose")
         elif log_only:
-            log = logger.logger("log_only")
+            log = logger("log_only")
         elif quiet:
-            log = logger.logger("suppress")
+            log = logger("suppress")
         else: # Default output, no flags needed for this
-            log = logger.logger("info")
+            log = logger("info")
     
         ##### I REALLY SHOULD MOVE ALL FILE DESCRIPTOR AND FILE PARSING TO IT'S OWN CLASS!
     
@@ -188,7 +188,7 @@ class swITch:
             
             ### SWITCH CONNECTION LOGIC ###  
             try:
-                dev = device_connector.device_connector(ip, uname, passwd, enable_passwd)
+                dev = device_connector(ip, uname, passwd, enable_passwd)
             except ValueError as e:
                 log.event('debug', str(e))
                 log.event('info', "WARNING: Could not connect to " + ip +

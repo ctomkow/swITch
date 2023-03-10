@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/swITch/version.py"
+
+[project]
+name = "swITch"
+dynamic = ['version']
+authors = [
+    {name = 'Craig Tomkow', email = 'ctomkow@gmail.com'},
+]
+description = 'Network Device Automation'
+requires-python = '>=3.6'
+license = {file = 'LICENSE.txt'}
+classifiers = [
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+]
+dependencies = [
+  'netmiko >=1.0.0, <5.0.0',
+]
+
+[project.scripts]
+swITch = 'swITch.swITch:swITch'
+
+[tool.setuptools.dynamic]
+readme = {file = ['README.md'], content-type = 'text/markdown'}
+version = {attr = 'swITch.version.py.__version__'}
