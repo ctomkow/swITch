@@ -29,28 +29,28 @@ class device_connector:
         self.password = password
         self.enable_password = enable_password
         
-        if self.raw_ip.find('cisco_ios') is not -1:
+        if self.raw_ip.find('cisco_ios') != -1:
                 self.ip = self.raw_ip.rstrip('cisco_ios').replace(',', '')
                 self.device_type = 'cisco_ios'
                 self.cisco_ios_normalize()
                 self.device_connection = self.connect()
-        elif self.raw_ip.find('hp_procurve') is not -1:
+        elif self.raw_ip.find('hp_procurve') != -1:
                 self.ip = self.raw_ip.rstrip('hp_procurve').replace(',', '')
                 self.device_type = 'hp_procurve'
                 self.hp_procurve_normalize()
                 self.device_connection = self.connect()
-        elif self.raw_ip.find('sentry_pdu') is not -1:
+        elif self.raw_ip.find('sentry_pdu') != -1:
                 self.ip = self.raw_ip.rstrip('sentry_pdu').replace(',', '')
                 self.device_type = 'sentry_pdu'
                 self.sentry_pdu_normalize()
                 self.sentry_pdu = SentryPdu(self.netmiko_device_details)
                 self.device_connection = self.sentry_pdu.connect()
-        elif self.raw_ip.find('juniper_junos') is not -1:
+        elif self.raw_ip.find('juniper_junos') != -1:
                 self.ip = self.raw_ip.rstrip('juniper_junos').replace(',', '')
                 self.device_type = 'juniper_junos'
                 self.juniper_junos_normalize()
                 self.device_connection = self.connect()
-        elif self.raw_ip.find('paloalto_panos') is not -1:
+        elif self.raw_ip.find('paloalto_panos') != -1:
                 self.ip = self.raw_ip.rstrip('paloalto_panos').replace(',', '')
                 self.device_type = 'paloalto_panos'
                 self.paloalto_panos_normalize()
