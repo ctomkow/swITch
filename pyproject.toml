@@ -24,7 +24,8 @@ classifiers = [
     'Programming Language :: Python :: 3.11',
 ]
 dependencies = [
-  'netmiko==3.4.0',
+    'netmiko==3.4.0',
+    'paramiko==2.8.1',
 ]
 
 [project.scripts]

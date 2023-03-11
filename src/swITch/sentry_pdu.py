@@ -13,9 +13,9 @@ def _override_check_dsa_parameters(parameters):
     Allows for shorter or longer parameters.p to be returned from the server's host key. This is a
     HORRIBLE hack and a security risk, please remove if possible!
     """
-    # if utils.bit_length(parameters.p) not in [1024, 2048, 3072]:
-        # raise ValueError("p is {}, must be exactly 1024, 2048, or 3072 bits long".format(utils.bit_length(parameters.p)))
-    if crypto_utils.bit_length(parameters.q) not in [160, 256]:
+    if parameters.p.bit_length() not in [640, 1024, 2048, 3072, 4096]:
+        raise ValueError("p is {}, must be exactly 640, 1024, 2048, 3072, or 4096 bits long".format(parameters.p.bit_length()))
+    if parameters.q.bit_length() not in [160, 256]:
         raise ValueError("q must be exactly 160 or 256 bits long")
 
     if not (1 < parameters.g < parameters.p):
