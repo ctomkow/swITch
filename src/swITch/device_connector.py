@@ -90,7 +90,7 @@ class device_connector:
             'username': self.username,
             'password': self.password,
             'verbose': False,
-            'conn_timeout': 20,
+            'conn_timeout': 30,
             'global_delay_factor': 2.0,
         }
 
