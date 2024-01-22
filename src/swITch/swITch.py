@@ -17,6 +17,7 @@ from argparse import RawDescriptionHelpFormatter
 
 class swITch:
 
+    args = None
 
     def __init__(self):
 
@@ -78,10 +79,7 @@ class swITch:
         outputFlags.add_argument('-z', '--zomg', action='store_true', required=False,
             help=argparse.SUPPRESS)
         
-        args = parser.parse_args()
-        
-        self.main(args.auth, args.cmd, args.debug, args.enable, args.ip, args.log_only,
-            args.port, args.set, args.quiet, args.file, args.verbose, args.zomg)
+        self.args = parser.parse_args()
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
@@ -301,5 +299,7 @@ class swITch:
 
     
 if __name__=='__main__':
-    swITch()
+    sw = swITch()
+    sw.main(sw.args.auth, sw.args.cmd, sw.args.debug, sw.args.enable, sw.args.ip, sw.args.log_only, sw.args.port,
+            sw.args.set, sw.args.quiet, sw.args.file, sw.args.verbose, sw.args.zomg)
 
