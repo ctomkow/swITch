@@ -88,15 +88,35 @@ class swITch:
 
         ### LOGGING STUFF ###
         if debug:
-            log = logger("debug")
+            try:
+                log = logger("debug")
+            except IOError:
+                print("Can't open output.log file")
+                raise SystemExit()
         elif verbose:
-            log = logger("verbose")
+            try:
+                log = logger("verbose")
+            except IOError:
+                print("Can't open output.log file")
+                raise SystemExit()
         elif log_only:
-            log = logger("log_only")
+            try:
+                log = logger("log_only")
+            except IOError:
+                print("Can't open output.log file")
+                raise SystemExit()
         elif quiet:
-            log = logger("suppress")
+            try:
+                log = logger("suppress")
+            except IOError:
+                print("Can't open output.log file")
+                raise SystemExit()
         else: # Default output, no flags needed for this
-            log = logger("info")
+            try:
+                log = logger("info")
+            except IOError:
+                print("Can't open output.log file")
+                raise SystemExit()
 
         ##### I REALLY SHOULD MOVE ALL FILE DESCRIPTOR AND FILE PARSING TO IT'S OWN CLASS!
     
