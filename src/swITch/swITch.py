@@ -8,8 +8,8 @@
 
 
 import datetime
-from logger import logger
-from device_connector import device_connector
+from .logger import logger
+from .device_connector import device_connector
 import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
