@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.scripts]
-swITch = 'swITch.swITch:swITch'
+swITch = 'swITch.swITch:entrypoint'
 
 [tool.setuptools.dynamic]
 readme = {file = ['README.md'], content-type = 'text/markdown'}

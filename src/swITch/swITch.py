@@ -8,8 +8,8 @@
 
 
 import datetime
-from .logger import logger
-from .device_connector import device_connector
+from swITch.logger import logger
+from swITch.device_connector import device_connector
 import argparse
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -78,14 +78,14 @@ class swITch:
             debug --> verbose --> default --> log-only --> suppress.""")
         outputFlags.add_argument('-z', '--zomg', action='store_true', required=False,
             help=argparse.SUPPRESS)
-        
+
         self.args = parser.parse_args()
 
     #--------------------------------------------------------------------------#
     #                               Main Loop                                  #
     #--------------------------------------------------------------------------#
     def main(self, auth, commands, debug, enable, ip_list, log_only, port_list, set, quiet, file_image, verbose, zomg):
-    
+
         ### LOGGING STUFF ###
         if debug:
             log = logger("debug")
@@ -97,7 +97,7 @@ class swITch:
             log = logger("suppress")
         else: # Default output, no flags needed for this
             log = logger("info")
-    
+
         ##### I REALLY SHOULD MOVE ALL FILE DESCRIPTOR AND FILE PARSING TO IT'S OWN CLASS!
     
         ### FILE DESCRIPTOR STUFF ###
@@ -123,7 +123,7 @@ class swITch:
                 log.event('debug', 'DEBUG: File name that can\'t be opened: ' + port_list)
                 raise IOError('Can\'t open port list file')
         if auth:
-            access_file = self.open_file(auth, 'r') 
+            access_file = self.open_file(auth, 'r')
             if access_file == -1:
                 log.event('debug', 'DEBUG: File name that can\'t be opened: ' + auth)
                 raise IOError('Can\'t open authentication file')
@@ -298,8 +298,7 @@ class swITch:
             return False
 
     
-if __name__=='__main__':
+def entrypoint():
     sw = swITch()
     sw.main(sw.args.auth, sw.args.cmd, sw.args.debug, sw.args.enable, sw.args.ip, sw.args.log_only, sw.args.port,
             sw.args.set, sw.args.quiet, sw.args.file, sw.args.verbose, sw.args.zomg)
-
